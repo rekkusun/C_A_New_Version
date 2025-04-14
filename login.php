@@ -38,7 +38,11 @@
                               <div class="control">
                                 <input type="password" class="input is-link" name="password" placeholder="Enter password">
                               </div>
+                            </div>
+                            <div class="field">
+                              <div class="control">
                               <button class="button is-ghost">Forgot Password?</button>
+                              </div>
                             </div>
                             <div class="field">
                               <div class="control is-flex is-justify-content-center">
