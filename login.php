@@ -7,6 +7,27 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
     <link rel="stylesheet" href="src/styles/style.css">
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script type="text/javascript">
+        function handleEnter(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+
+      // Retrieve form inputs
+      let email = document.querySelector('input[name="email"]').value.trim();
+      let password = document.querySelector('input[name="password"]').value.trim();
+
+      // Validate inputs
+      if (!email || !password) {
+        swal('Error', 'All fields are required!', 'error'); // SweetAlert for errors
+      } else {
+        document.getElementById('loginform').submit();
+      }
+    }
+  }
+
+  // Add event listener to trigger handleEnter
+  document.addEventListener('keydown', handleEnter);
+    </script>
   </head>
 <body>
     <div class="section columns custom-background-color p-1 border-radius-customize">
@@ -14,7 +35,7 @@
             <div class="contents">
                 <div class="field is-flex is-justify-content-center is-align-item-center">
                     <div class="control">
-                    <img src="src/image/SmartPark.png">  
+                    <img src="src/image/SmartPark.png" title="SmartPark" alt="SmartPark Logo">  
                     </div>
                 </div>
             </div>
@@ -27,17 +48,17 @@
             </div>
                 <div class="field">
                   <div class="control">
-                        <form action="" method="post">
+                        <form action="login.php" method="post" id="loginform">
                             <div class="field">
-                              <label for="email">Email</label>
+                              <label for="email" class="label">Email</label>
                               <div class="control">
-                                <input type="email" class="input mb-3 is-link" name="email" placeholder="Enter email">
+                                <input type="email" class="input mb-3 is-link" name="email" placeholder="Enter email" autocomplete="off">
                               </div>
                             </div>
                             <div class="field">
-                              <label for="password">Password</label>
+                              <label for="password" class="label">Password</label>
                               <div class="control">
-                                <input type="password" class="input is-link" name="password" placeholder="Enter password">
+                                <input type="password" class="input is-link" name="password" placeholder="Enter password" autocomplete="off"> 
                               </div>
                             </div>
                             <div class="field">
@@ -57,46 +78,87 @@
           <div class="column is-half is-hidden-mobile is-flex is-justify-content-center is-align-items-center">
               <h3 class="has-text-white is-size-3 is-centered has-text-weight-bold"><center>Cash Advance Request System</center></h3>
             </div>            
-    </div>
+    </div>  
 </body>
 </html>
-
-<?php 
-$servername = "127.0.0.1, 3304";
+<?php
+session_start();
+$servername = "127.0.0.1,3304";
 $conn = new PDO("sqlsrv:server=$servername; Database=C_A", 'root','jeff');
 
-if(isset($_POST['login'])){
+if((isset($_POST['login'])&& $_SERVER['REQUEST_METHOD']=='POST')|| isset($_REQUEST['login'])){
   $email = $_POST['email'];
   $password = $_POST['password'];
+    if(!empty($email) && !empty($password)){
+      $stmtdata = $conn->prepare("SELECT user_email, user_password, user_fname FROM USERS WHERE user_email=:acc_email");
+      $stmtdata->bindValue(":acc_email", $email, PDO::PARAM_STR);
+      $stmtdata->execute();
+      $user =$stmtdata->fetch(PDO::FETCH_ASSOC);
 
-  $stmtemail = $conn->prepare("SELECT * FROM USERS WHERE user_email=:acc_email");
-  $stmtemail->bindValue(":acc_email", $email);
-  $stmtemail->execute();
-  $fetched_email = $stmtemail->fetchColumn();
-
-  if(isset($_POST['email'])==$fetched_email){
-    $stmtpassword = $conn->prepare("SELECT * FROM USERS WHERE user_password=:acc_password");
-    $stmtpassword->bindValue(":acc_password", $password);
-    $stmtpassword->execute();
-    $fetched_password = $stmtpassword->fetchColumn();
-      if(isset($_POST['password'])==$fetched_password){
-        $_SESSION['email'] = $email;
-        $_SESSION['password'] = $password;
-        header("Location:requestor.php");
-        exit;
-      }else{
-        echo "<script>
-                 swal('Error Login','Invalid Email', 'error');
-              </script>";
+      if($user){
+        if($email == $user['user_email'] && $password == $user['user_password']){
+          $_SESSION['username'] = $user['user_fname'];
+            sleep(1);
+            header("Location: requestor.php");
+            exit();
+        }else {
+          $_SESSION['error'] = "Invalid credentials"; 
+          echo "<script>
+                  swal('Error Login', 'Invalid credentials!', 'error');
+                </script>";
       }
-  }else{
-    echo "<script>
-              swal('Error Login','Invalid Email', 'error');
-          </script>";
-  }
+      }else{
+        $_SESSION['error'] = "Invalid credentials";
+        echo "<script>
+                  swal('Error Login', 'Account does not exist!', 'error');
+                </script>";
+      }
+    }else{
+      $_SESSION['error'] = 'Invalid Credentials';
+      echo "<script>
+                  swal('Error Login', 'All fields are required to have inputs', 'error');
+              </script>";
+      header("Location : login.php");
+    }
+      
 }
 
-if(isset($_SESSION['email'])){
-  unset($_SESSION['email']); unset($_SESSION['password']);
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    if(!empty($email) && !empty($password)){
+      $stmtdata = $conn->prepare("SELECT user_email, user_password, user_fname FROM USERS WHERE user_email=:acc_email");
+      $stmtdata->bindValue(":acc_email", $email, PDO::PARAM_STR);
+      $stmtdata->execute();
+      $user =$stmtdata->fetch(PDO::FETCH_ASSOC);
+      $name = $user['user_fname'];
+      if($user){
+        if($email == $user['user_email'] && $password == $user['user_password']){
+          $_SESSION['username'] = $name;
+            sleep(1);
+            header("Location: requestor.php");
+            exit();
+        }else {
+          $_SESSION['error'] = "Invalid credentials"; 
+          echo "<script>
+                  swal('Error Login', 'Invalid credentials!', 'error');
+                </script>";
+      }
+      }else{
+        $_SESSION['error'] = "Invalid credentials";
+        echo "<script>
+                  swal('Error Login', 'Account does not exist!', 'error');
+                </script>";
+      }
+    }else{
+      $_SESSION['error'] = 'Invalid Credentials';
+      echo "<script>
+                  swal('Error Login', 'All fields are required to have inputs', 'error');
+              </script>";
+      header("Location : login.php");
+    }
 }
+
 ?>
+
