@@ -14,3 +14,42 @@
 .custom-hovered-color{
     color: #14126b;
 }
+#addbutton:disabled{
+    background-color: #a3a2c2;
+    color: #e0e0e0;
+    opacity: 1;
+}
+@keyframes fadeInmodal{
+    from{
+        opacity: 0;
+    }to{
+        opacity: 1;
+    }
+}
+@keyframes fadeOutmodal{
+    from{
+        opacity: 1;
+    }to{
+        opacity: 0;
+    }
+}
+.modal.is-active{
+    animation: fadeInmodal 0.3s ease-in-out;
+}
+.modal{
+    animation-duration: 0.3s;
+    animation-timing-function:ease-in-out;
+}
+.modal.is-closing{
+    animation: fadeOutmodal 0.3s ease-in-out;
+}
+@media screen and (max-width: 768px) {
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    table {
+        width: 100%;
+        min-width: 600px; /* Ensures proper scrolling */
+    }
+}

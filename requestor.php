@@ -35,6 +35,7 @@ function logout(){
     <title>SmartPark Systems Solutions Cash Advance</title>
 </head>
 <body>
+
     <nav class="level  p-5 p-4-tablet">
     <div class="level-center">
             <div class="level-item">
@@ -99,6 +100,7 @@ function logout(){
         <div class="column is-two-thirds">
             <div class="box">
             <h3 class="title is-5 custom-text-color">Pending request</h3>
+            <div class="table-container">
                 <table class="table is-fullwidth is-striped">
                     <thead>
                         <tr>
@@ -123,44 +125,132 @@ function logout(){
                         </tr>
                     </tbody>
                 </table>
-                <div class="is-flex is-justify-content-end mx-5">
-                <button class="button is-responsive custom-background-color has-text-white"><i class="fa-solid fa-plus"></i>&nbspAdd</button>
                 </div>
-                
+                <div class="is-flex is-justify-content-end mx-5">
+                <button class="button is-responsive custom-background-color has-text-white" id="requesttrigger" data-target="request-form-modal"><i class="fa-solid fa-plus"></i>&nbspAdd</button>
+                </div>     
             </div>
        
         </div>
         <div class="column">
             <div class="box">
                 <h3 class="title is-5 custom-text-color">Approved requests</h3>
-                <table class="table is-fullwidth is-striped">
-                    <thead>
-                        <tr>
-                            <th class="has-text-centered">Request Title</th>
-                            <th class="has-text-centered">Date Approved</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
+                <div class="table-container">
+                    <table class="table is-fullwidth is-striped">
+                        <thead>
+                            <tr>
+                                <th class="has-text-centered">Request Title</th>
+                                <th class="has-text-centered">Date Approved</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="has-text-centered">First Request</td>
+                                <td class="has-text-centered">July 20, 2024</td>
+                            </tr>
+                            <tr>
                             <td class="has-text-centered">First Request</td>
                             <td class="has-text-centered">July 20, 2024</td>
-                        </tr>
-                        <tr>
-                        <td class="has-text-centered">First Request</td>
-                        <td class="has-text-centered">July 20, 2024</td>
-                        </tr>
-                    </tbody>
-
-                </table>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-    
     </div>
+    <form action="" id="requestForm" method="post">
+        <div class="modal" id="requestmodal">
+            <div class="modal-background"></div>
+            <div class="modal-card">
+                <header class="modal-card-head">
+                    <p class="modal-card-title title is-3 custom-text-color">Request Form</p>
+                    <button class="delete" id="closebutton"></button>
+                </header>
+                <section class="modal-card-body">
+                    <div class="mb-4">
+                    <label for="title_request" class="title is-6 custom-text-color" require>General Purpose</label>
+                    <input class="input" type="text" name="title_request" id="title_request" placeholder="Purpose of Request">
+                    </div>
+                    <h6 class="title is-6 custom-text-color">Breakdown of Expenses</h6>
+                    <table class="table is-fullwidth" id="requesttable">
+                        <thead>
+                            <tr>
+                            <th><abbr title="Expenses" class="is-flex is-justify-content-center">Expenses</abbr></th>
+                            <th><abbr title="Amount"class="is-flex is-justify-content-center">Amount</abbr></th>
+                            <th><abbr title="Configuration"class="is-flex is-justify-content-center">Configuration</abbr></th>
+                            </tr>
+                        </thead>
+                        <tbody>    
+                        </tbody>
+                    </table>
+                    <button type="button" class="button is-responsive custom-background-color has-text-white is-pulled-right" onclick="generatefield()"><i class="fa-solid fa-plus"></i>&nbspAdd</button>
+                </section>
+                <footer class="modal-card-foot is-justify-content-right">
+                        <input type="submit" class="button is-success custom-background-color has-text-white" id="addbutton" name="save" value="Save"/>
+                </footer>
+            </div>
+        </div>
+    </form>
 </body>
 </html>
 <script>
     var session = "logout()";
+    var openmodal = document.getElementById('requesttrigger');
+    var closemodal = document.getElementById('closebutton');
+    var modal = document.getElementById('requestmodal');
+
+openmodal.addEventListener('click',function(){
+    setTimeout(()=>{
+        modal.classList.add('is-active');
+    });
+});
+closemodal.addEventListener('click', function(){
+    modal.classList.add('is-closing');
+    setTimeout(()=>{
+        modal.classList.remove('is-active','is-closing');
+    },300);
+});
+let count = 0;
+function generatefield(){
+    count++;
+
+    var requesttable = document.getElementById('requesttable');
+    var requesttablebody = document.getElementsByTagName('tbody')[2];
+    
+    var addrow = requesttablebody.insertRow();
+    var expenses_row = addrow.insertCell(0);
+    var amount_row = addrow.insertCell(1);
+    var delete_row = addrow.insertCell(2);
+    delete_row.style.display = "flex";
+    delete_row.style.justifyContent = "center";
+    delete_row.style.alignContent = "center";
+    
+    let expensesInput = document.createElement("input");
+    expensesInput.type = "text";
+    expensesInput.placeholder = "Enter Expenses here";
+    expensesInput.classList.add('input', 'is-info');
+    expensesInput.name = "expenses[]";
+
+    let amountInput = document.createElement("input");
+    amountInput.type= "number";
+    amountInput.placeholder = "Enter amount here";
+    amountInput.classList.add('input','is-info');
+    amountInput.name = "amount[]";
+
+    let delete_button = document.createElement("button");
+    delete_button.classList.add('button','has-background-danger', 'mx-1','my-2', 'mobile-view');
+    delete_button.title = 'Remove';
+    delete_button.innerHTML ='<i class="fa-regular fa-trash-can" style="color: #ffffff;"></i>';
+    delete_button.addEventListener('click', function(){
+        addrow.remove();
+    });
+
+    expenses_row.appendChild(expensesInput);
+    amount_row.appendChild(amountInput);
+    delete_row.appendChild(delete_button);
+
+}
 </script>
 <?php
 if(isset($_POST['logout'])){
@@ -178,7 +268,7 @@ if(isset($_POST['logout'])){
                         .then(() => {
                         setTimeout(()=>{
                             window.location.href = "login.php";
-                        }, 2000);
+                        }, 500);
                         });
             }else{}
                 
@@ -186,4 +276,39 @@ if(isset($_POST['logout'])){
           </script>';
    
 }
+
+if (isset($_POST['save'])) {
+    $title = trim($_POST['title_request']);
+
+    if (empty($title)|| empty($_POST['expenses']) || empty($_POST['amount'])) {
+        echo "<script>
+                swal('Error', 'All fields are required to have inputs', 'error');
+              </script>";
+    } else {
+        $hasemptyfield=false;
+        for ($i = 0; $i < count($_POST['expenses']); $i++) {
+            $expense = trim($_POST['expenses'][$i]);
+            $amount = trim($_POST['amount'][$i]);
+
+            if(empty($expense)||empty($amount)){
+                $hasemptyfield = true;
+                break;
+            }
+        }
+           if($hasemptyfield){
+                echo"<script>
+                swal('Error', 'All fields are required to have inputs', 'error');
+              </script>";
+            }else{
+                echo "Title Subject: " . htmlspecialchars($title) . "<br>";
+                for ($i = 0; $i < count($_POST['expenses']); $i++) {  
+                echo "Expense: " . htmlspecialchars($_POST['expenses'][$i]) . " - ";
+                echo "Amount: " . htmlspecialchars($_POST['amount'][$i]) . "<br>";
+                }
+            }    
+        }
+    }
+
+
+
 ?>

@@ -11,7 +11,6 @@
         function handleEnter(event) {
     if (event.key === 'Enter') {
       event.preventDefault();
-
       // Retrieve form inputs
       let email = document.querySelector('input[name="email"]').value.trim();
       let password = document.querySelector('input[name="password"]').value.trim();
@@ -24,7 +23,6 @@
       }
     }
   }
-
   // Add event listener to trigger handleEnter
   document.addEventListener('keydown', handleEnter);
     </script>
