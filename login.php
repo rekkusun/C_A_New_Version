@@ -8,22 +8,19 @@
     <link rel="stylesheet" href="src/styles/style.css">
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script type="text/javascript">
-        function handleEnter(event) {
+    function handleEnter(event) {
     if (event.key === 'Enter') {
       event.preventDefault();
-      // Retrieve form inputs
       let email = document.querySelector('input[name="email"]').value.trim();
       let password = document.querySelector('input[name="password"]').value.trim();
 
-      // Validate inputs
       if (!email || !password) {
-        swal('Error', 'All fields are required!', 'error'); // SweetAlert for errors
+        swal('Error', 'All fields are required!', 'error');
       } else {
         document.getElementById('loginform').submit();
       }
     }
   }
-  // Add event listener to trigger handleEnter
   document.addEventListener('keydown', handleEnter);
     </script>
   </head>
@@ -75,7 +72,7 @@
           </div>   
           <div class="column is-half is-hidden-mobile is-flex is-justify-content-center is-align-items-center">
               <h3 class="has-text-white is-size-3 is-centered has-text-weight-bold"><center>Cash Advance Request System</center></h3>
-            </div>            
+          </div>            
     </div>  
 </body>
 </html>
@@ -84,7 +81,7 @@ session_start();
 $servername = "127.0.0.1,3304";
 $conn = new PDO("sqlsrv:server=$servername; Database=C_A", 'root','jeff');
 
-if((isset($_POST['login'])&& $_SERVER['REQUEST_METHOD']=='POST')|| isset($_REQUEST['login'])){
+if((isset($_POST['login'])&& $_SERVER['REQUEST_METHOD']==='POST')|| isset($_REQUEST['login'])||$_SERVER['REQUEST_METHOD']==='POST'){
   $email = $_POST['email'];
   $password = $_POST['password'];
     if(!empty($email) && !empty($password)){
@@ -120,43 +117,5 @@ if((isset($_POST['login'])&& $_SERVER['REQUEST_METHOD']=='POST')|| isset($_REQUE
     }
       
 }
-
-
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
-    if(!empty($email) && !empty($password)){
-      $stmtdata = $conn->prepare("SELECT user_email, user_password, user_fname FROM USERS WHERE user_email=:acc_email");
-      $stmtdata->bindValue(":acc_email", $email, PDO::PARAM_STR);
-      $stmtdata->execute();
-      $user =$stmtdata->fetch(PDO::FETCH_ASSOC);
-      $name = $user['user_fname'];
-      if($user){
-        if($email == $user['user_email'] && $password == $user['user_password']){
-          $_SESSION['username'] = $name;
-            sleep(1);
-            header("Location: requestor.php");
-            exit();
-        }else {
-          $_SESSION['error'] = "Invalid credentials"; 
-          echo "<script>
-                  swal('Error Login', 'Invalid credentials!', 'error');
-                </script>";
-      }
-      }else{
-        $_SESSION['error'] = "Invalid credentials";
-        echo "<script>
-                  swal('Error Login', 'Account does not exist!', 'error');
-                </script>";
-      }
-    }else{
-      $_SESSION['error'] = 'Invalid Credentials';
-      echo "<script>
-                  swal('Error Login', 'All fields are required to have inputs', 'error');
-              </script>";
-      header("Location : login.php");
-    }
-}
-
 ?>
 

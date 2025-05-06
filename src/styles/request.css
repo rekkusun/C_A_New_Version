@@ -53,3 +53,16 @@
         min-width: 600px; /* Ensures proper scrolling */
     }
 }
+
+::-webkit-scrollbar {
+    display: none;
+}
+
+
+html {
+    scrollbar-width: none;
+}
+
+body {
+    -ms-overflow-style: none;
+}

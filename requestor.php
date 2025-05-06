@@ -2,16 +2,24 @@
 session_set_cookie_params(3600);
 session_start();
 require 'vendor/autoload.php';
-
+$servername = "127.0.0.1,3304";
+$conn = new PDO("sqlsrv:server=$servername; Database=C_A", 'root','jeff');
+if (!isset($_SESSION['token'])) {
+    $_SESSION['token'] = bin2hex(random_bytes(32));
+}
 if(isset($_SESSION['username'])){
     $username = $_SESSION['username'];
+    $sql = "SELECT id_user FROM USERS WHERE user_fname = :username";
+    $stmt = $conn->prepare($sql);
+    $stmt->bindParam(':username',$username);
+    $stmt->execute();
+    $user_id = $stmt->fetch(PDO::FETCH_ASSOC);
+    $current_user = $user_id['id_user'];
 }else{
     header("Location: login.php");
     exit();
 }
-
 use NumberToWords\NumberToWords;
-
 //Instantiate the NumberToWords class
 $numberToWords = new NumberToWords();
 
@@ -21,8 +29,7 @@ function logout(){
     sleep(2);
     header('Location:login.php');
     exit();
-}
-?>
+}?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -36,28 +43,27 @@ function logout(){
 </head>
 <body>
 
-    <nav class="level  p-5 p-4-tablet">
-    <div class="level-center">
-            <div class="level-item">
-                <h4 class="title is-2 is-spaced custom-text-color"><?php echo "HI, ". $username?></h> 
+    <nav class="level  p-4">
+            <div class="level-center">
+                <div class="level-item">
+                    <h4 class="title is-2 is-5-mobile is-spaced custom-text-color"><?php echo "HI, ". $username?></h> 
+                </div>
             </div>
-        </div>
-        <div class="level-left">
-            <p class="level-item">
-                <image src="src/image/SmartPark.png" class="level-item" alt="SmartPark Logo" title="SmartPark">
-            </p>
-        </div>
-       <div class="level-right">
-            <div class="level-item">
-                <form action="" method="post">
-                <input type="submit" name="logout" class="button is-danger has-text-white" value="Logout">
-                </form>
+            <div class="level-left">
+                <p class="level-item">
+                    <image src="src/image/SmartPark.png" class="level-item" alt="SmartPark Logo" title="SmartPark">
+                </p>
             </div>
-       </div>
-        
+            <div class="level-right">
+                <div class="level-item">
+                    <form action="" method="post">
+                    <input type="submit" name="logout" class="button is-danger has-text-white" value="Logout">
+                    </form>
+                </div>
+            </div> 
     </nav>
 
-    <div class="columns is-4 p-4 is-flex-shrink-1">
+    <div class="columns is-4 p-4">
         <div class="column">
         <div class="card custom-background-color">
                 <div class="card-content is-flex-direction-column is-justify-content-center is-align-content-center">
@@ -95,7 +101,7 @@ function logout(){
             </div>
         </div>
     </div>
-    <div class="block mx-4">
+    <div class="block p-4">
     <div class="columns">
         <div class="column is-two-thirds">
             <div class="box">
@@ -111,22 +117,11 @@ function logout(){
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td class="has-text-centered">test1</td>
-                            <td class="has-text-centered">test1</td>
-                            <td class="has-text-centered">test1</td>
-                            <td class="has-text-centered">test1</td>
-                        </tr>
-                        <tr>
-                            <td class="has-text-centered">test2</td>
-                            <td class="has-text-centered">test2</td>
-                            <td class="has-text-centered">test2</td>
-                            <td class="has-text-centered">test2</td>
-                        </tr>
+                        
                     </tbody>
                 </table>
                 </div>
-                <div class="is-flex is-justify-content-end mx-5">
+                <div class="is-flex is-justify-content-end mx-5 mx-3-mobile">
                 <button class="button is-responsive custom-background-color has-text-white" id="requesttrigger" data-target="request-form-modal"><i class="fa-solid fa-plus"></i>&nbspAdd</button>
                 </div>     
             </div>
@@ -181,7 +176,8 @@ function logout(){
                             <th><abbr title="Configuration"class="is-flex is-justify-content-center">Configuration</abbr></th>
                             </tr>
                         </thead>
-                        <tbody>    
+                        <tbody>
+
                         </tbody>
                     </table>
                     <button type="button" class="button is-responsive custom-background-color has-text-white is-pulled-right" onclick="generatefield()"><i class="fa-solid fa-plus"></i>&nbspAdd</button>
@@ -249,8 +245,26 @@ function generatefield(){
     expenses_row.appendChild(expensesInput);
     amount_row.appendChild(amountInput);
     delete_row.appendChild(delete_button);
+    }
+   
+    function EnterButton(event){
+        if(event.key ==='Enter'){
+            let expensesCount = document.querySelectorAll('input[name="expenses[]"]');
+            let amountCount = document.querySelectorAll('input[name="amount[]"]');
+           const expenses_count = expensesCount.length;
+           const amount_count = amountCount.length;
 
-}
+            let form = document.getElementById('addbutton');
+            if(form && form.tagName === 'FORM'){
+                event.preventDefault();
+                form.submit();
+            }
+        }    
+    }
+    document.addEventListener('keydown', EnterButton);
+    document.getElementById('addbutton').addEventListener("click",function(){
+        location.reload();
+    });
 </script>
 <?php
 if(isset($_POST['logout'])){
@@ -268,15 +282,12 @@ if(isset($_POST['logout'])){
                         .then(() => {
                         setTimeout(()=>{
                             window.location.href = "login.php";
-                        }, 500);
+                        }, 800);
                         });
-            }else{}
-                
+            }else{}          
             });
           </script>';
-   
 }
-
 if (isset($_POST['save'])) {
     $title = trim($_POST['title_request']);
 
@@ -284,7 +295,7 @@ if (isset($_POST['save'])) {
         echo "<script>
                 swal('Error', 'All fields are required to have inputs', 'error');
               </script>";
-    } else {
+    }else {
         $hasemptyfield=false;
         for ($i = 0; $i < count($_POST['expenses']); $i++) {
             $expense = trim($_POST['expenses'][$i]);
@@ -300,15 +311,49 @@ if (isset($_POST['save'])) {
                 swal('Error', 'All fields are required to have inputs', 'error');
               </script>";
             }else{
-                echo "Title Subject: " . htmlspecialchars($title) . "<br>";
-                for ($i = 0; $i < count($_POST['expenses']); $i++) {  
-                echo "Expense: " . htmlspecialchars($_POST['expenses'][$i]) . " - ";
-                echo "Amount: " . htmlspecialchars($_POST['amount'][$i]) . "<br>";
+                try{
+                    $request_title = htmlspecialchars($title);
+                    $total = 0;
+                for ($count_amount = 0; $count_amount < count($_POST['amount']); $count_amount++) {
+                    $_POST['amount'][$count_amount] = filter_var($_POST['amount'][$count_amount], FILTER_SANITIZE_NUMBER_INT);
+                    $total += (int) $_POST['amount'][$count_amount];
+                }
+                $date_today = date("Y-m-d");
+                $status = "Pending Review";
+                $sql_insert_title = "INSERT INTO tbl_request (request_title, request_total_amount, request_date, requestor_id,request_status) VALUES(:title, :amount, :date_posted, :requestor, :status_request)";
+                $prepare_tbl_request = $conn->prepare($sql_insert_title);
+                $prepare_tbl_request->bindParam(':title',$request_title);
+                $prepare_tbl_request->bindParam(':amount',$total);
+                $prepare_tbl_request->bindParam(':date_posted',$date_today);
+                $prepare_tbl_request->bindParam(':requestor', $current_user);
+                $prepare_tbl_request->bindParam(':status_request',$status);
+                $prepare_tbl_request->execute();
+
+                $sql_fetch_request_id = "SELECT request_id FROM tbl_request WHERE request_title = :title_request";
+                $fetch_request_id = $conn ->prepare($sql_fetch_request_id);
+                $fetch_request_id->bindParam(':title_request',$request_title);
+                $fetch_request_id->execute();
+                $fetch_id = $fetch_request_id->fetch(PDO::FETCH_ASSOC);
+                $fetch_request_id = $fetch_id['request_id']; 
+
+                for ($i = 0; $i < count($_POST['expenses']); $i++) {
+                 $sql_insert_breakdown = "INSERT INTO Request_Breakdown (request_breakdown_description, request_breakdown_amount, request_title_id) VALUES(:request_description, :request_description_amount, :request_title_id)";
+                 $prepare_breakdown_request = $conn->prepare($sql_insert_breakdown);
+                 $prepare_breakdown_request ->bindParam(':request_description',$_POST['expenses'][$i]);
+                 $prepare_breakdown_request ->bindParam(':request_description_amount', $_POST['amount'][$i]);
+                 $prepare_breakdown_request ->bindParam(':request_title_id', $fetch_request_id);
+                 $prepare_breakdown_request ->execute();
+                }
+                echo "<script>swal('Success!', 'Your Request Has Been Uploaded!', 'success');</script>";
+                $conn = null;
+                }catch(PDOException $e){
+                    echo "<script>
+                            swal('Error Inserting', 'Failed to Upload Request', 'error');
+                          </script>";
                 }
             }    
         }
+        
     }
-
-
 
 ?>
