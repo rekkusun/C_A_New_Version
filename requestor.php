@@ -22,14 +22,7 @@ if(isset($_SESSION['username'])){
 use NumberToWords\NumberToWords;
 //Instantiate the NumberToWords class
 $numberToWords = new NumberToWords();
-
-function logout(){
-    $_SESSION = [];
-    session_destroy();
-    sleep(2);
-    header('Location:login.php');
-    exit();
-}?>
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -107,7 +100,7 @@ function logout(){
             <div class="box">
             <h3 class="title is-5 custom-text-color">Pending request</h3>
             <div class="table-container">
-                <table class="table is-fullwidth is-striped">
+                <table class="table is-fullwidth is-striped" id="pendingtable">
                     <thead>
                         <tr>
                             <th class="has-text-centered">Request Title</th>
@@ -117,7 +110,6 @@ function logout(){
                         </tr>
                     </thead>
                     <tbody>
-                        
                     </tbody>
                 </table>
                 </div>
@@ -171,8 +163,10 @@ function logout(){
                     <table class="table is-fullwidth" id="requesttable">
                         <thead>
                             <tr>
-                            <th><abbr title="Expenses" class="is-flex is-justify-content-center">Expenses</abbr></th>
-                            <th><abbr title="Amount"class="is-flex is-justify-content-center">Amount</abbr></th>
+                            <th><abbr title="Expenses" class="is-flex is-justify-content-center">Expense Summary</abbr></th>
+                            <th><abbr title="Amount"class="is-flex is-justify-content-center">Unit Price</abbr></th>
+                            <th><abbr title="Quantity"class="is-flex is-justify-content-center">Quantity</abbr></th>
+                            <th><abbr title="Total Price"class="is-flex is-justify-content-center">Total Price</abbr></th>
                             <th><abbr title="Configuration"class="is-flex is-justify-content-center">Configuration</abbr></th>
                             </tr>
                         </thead>
@@ -191,7 +185,7 @@ function logout(){
 </body>
 </html>
 <script>
-    var session = "logout()";
+ // Script for opening and closing the modal   
     var openmodal = document.getElementById('requesttrigger');
     var closemodal = document.getElementById('closebutton');
     var modal = document.getElementById('requestmodal');
@@ -207,10 +201,72 @@ closemodal.addEventListener('click', function(){
         modal.classList.remove('is-active','is-closing');
     },300);
 });
-let count = 0;
-function generatefield(){
-    count++;
+//function for generating a value from the javascript
+function addpending(title, date, status){
+    var pending_table = document.getElementById('pendingtable');
+    var pending_table_body = document.getElementsByTagName('tbody')[0];
+    var addrow = pending_table_body.insertRow();
+    var title_row = addrow.insertCell(0);
+    var request_date = addrow.insertCell(1);
+    var request_status = addrow.insertCell(2);
+    var request_config = addrow.insertCell(3);
 
+    title_row.classList.add('has-text-centered');
+    title_row.innerHTML = title;
+    request_date.classList.add('has-text-centered');
+    request_date.innerHTML = date;
+    request_status.classList.add('has-text-centered');
+    request_status.innerHTML = status;
+
+    var remarksdiv = document.createElement("div");
+    remarksdiv.classList.add('is-flex','is-justify-content-space-around','is-align-items-center');
+    remarksdiv.style.gap = "0.25rem";
+    var buttonClasses = ['button', 'is-small', 'is-flex', 'is-align-items-center'];
+    var view_button = document.createElement("button");
+    view_button.classList.add(...buttonClasses,'is-link');
+    view_button.innerHTML = '<div class="is-flex is-flex-direction-column"><i class="fa-solid fa-envelope-open-text" style="color: #ffffff;"></i><span class="has-text-white">View</span></div>';
+    view_button.title = "View";
+    view_button.addEventListener("click", function(){
+        swal({
+            title: "File Opened",
+            text: "You open the file",
+            icon: "success",
+            button: "Okay",
+        });
+    });
+
+    var edit_button = document.createElement("button");
+    edit_button.classList.add(...buttonClasses,'is-warning');
+    edit_button.innerHTML = '<div class="is-flex is-flex-direction-column"><i class="fa-solid fa-file-pen" style="color: #ffffff;"></i><span class="has-text-white">Edit</span></div>';
+    edit_button.title = "Edit";
+    edit_button.addEventListener("click",function(){
+        swal({
+            title: "File Edited",
+            text: "You open the file",
+            icon: "success",
+            button: "Okay",
+        });
+    });
+
+    var delete_button = document.createElement("button");
+    delete_button.classList.add(...buttonClasses, 'is-danger');
+    delete_button.innerHTML = '<div class="is-flex is-flex-direction-column"><i class="fa-regular fa-trash-can" style="color: #ffffff;"></i><span class="has-text-white">Delete</span></div>';
+    delete_button.title = "Delete";
+    delete_button.addEventListener("click", function(){
+        swal({
+            title: "File Deleted",
+            text: "You deleted the file",
+            icon: "warning",
+            button: "Okay",
+        });
+    });
+    remarksdiv.appendChild(view_button);
+    remarksdiv.appendChild(edit_button);
+    remarksdiv.appendChild(delete_button);
+    request_config.appendChild(remarksdiv);
+}
+//function for generating a new field for specific expenses and amount
+function generatefield(){
     var requesttable = document.getElementById('requesttable');
     var requesttablebody = document.getElementsByTagName('tbody')[2];
     
@@ -247,6 +303,7 @@ function generatefield(){
     delete_row.appendChild(delete_button);
     }
    
+    //To still make interaction when Enter button is clicked
     function EnterButton(event){
         if(event.key ==='Enter'){
             let expensesCount = document.querySelectorAll('input[name="expenses[]"]');
@@ -265,8 +322,29 @@ function generatefield(){
     document.getElementById('addbutton').addEventListener("click",function(){
         location.reload();
     });
+
+    //For avoiding form resubmission when page refresh
+    if ( window.history.replaceState ) {
+        window.history.replaceState( null, null, window.location.href );
+    }
 </script>
 <?php
+//Fetching Pending Request
+$fetch_pending = "SELECT * FROM tbl_request WHERE request_status = :status_request AND deleted = :deleted_file ORDER BY request_date DESC";
+$prepare_pending_request = $conn->prepare($fetch_pending);
+$prepare_pending_request->bindValue(':status_request',"Pending Review");
+$prepare_pending_request ->bindValue(':deleted_file',false);
+$prepare_pending_request->execute();
+$rows = $prepare_pending_request->fetchAll(PDO::FETCH_ASSOC);
+foreach($rows as $row){
+   echo "<script>
+        addpending('" . addslashes($row['request_title']) . "', 
+                   '" . addslashes($row['request_date']) . "', 
+                   '" . addslashes($row['request_status']) . "');
+        </script>";
+}
+
+//User_Logout
 if(isset($_POST['logout'])){
     session_unset();
     echo '<script>
@@ -288,6 +366,7 @@ if(isset($_POST['logout'])){
             });
           </script>';
 }
+//Performing Request
 if (isset($_POST['save'])) {
     $title = trim($_POST['title_request']);
 
@@ -320,13 +399,15 @@ if (isset($_POST['save'])) {
                 }
                 $date_today = date("Y-m-d");
                 $status = "Pending Review";
-                $sql_insert_title = "INSERT INTO tbl_request (request_title, request_total_amount, request_date, requestor_id,request_status) VALUES(:title, :amount, :date_posted, :requestor, :status_request)";
+                $deleted = 0;
+                $sql_insert_title = "INSERT INTO tbl_request (request_title, request_total_amount, request_date, requestor_id,request_status,deleted) VALUES(:title, :amount, :date_posted, :requestor, :status_request,:deleted)";
                 $prepare_tbl_request = $conn->prepare($sql_insert_title);
                 $prepare_tbl_request->bindParam(':title',$request_title);
                 $prepare_tbl_request->bindParam(':amount',$total);
                 $prepare_tbl_request->bindParam(':date_posted',$date_today);
                 $prepare_tbl_request->bindParam(':requestor', $current_user);
                 $prepare_tbl_request->bindParam(':status_request',$status);
+                $prepare_tbl_request->bindParam(':deleted',$deleted);
                 $prepare_tbl_request->execute();
 
                 $sql_fetch_request_id = "SELECT request_id FROM tbl_request WHERE request_title = :title_request";
@@ -344,7 +425,13 @@ if (isset($_POST['save'])) {
                  $prepare_breakdown_request ->bindParam(':request_title_id', $fetch_request_id);
                  $prepare_breakdown_request ->execute();
                 }
-                echo "<script>swal('Success!', 'Your Request Has Been Uploaded!', 'success');</script>";
+                //Displaying a success message and updating the table content
+                echo "<script>
+                            swal('Success!', 'Your Request Has Been Uploaded!', 'success')
+                            .then(() => {
+                                window.location.href = 'requestor.php';
+                            });
+                        </script>";
                 $conn = null;
                 }catch(PDOException $e){
                     echo "<script>
