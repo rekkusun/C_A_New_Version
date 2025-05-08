@@ -35,8 +35,7 @@ $numberToWords = new NumberToWords();
     <title>SmartPark Systems Solutions Cash Advance</title>
 </head>
 <body>
-
-    <nav class="level  p-4">
+    <nav class="level p-4">
             <div class="level-center">
                 <div class="level-item">
                     <h4 class="title is-2 is-5-mobile is-spaced custom-text-color"><?php echo "HI, ". $username?></h> 
@@ -164,9 +163,10 @@ $numberToWords = new NumberToWords();
                         <thead>
                             <tr>
                             <th><abbr title="Expenses" class="is-flex is-justify-content-center">Expense Summary</abbr></th>
-                            <th><abbr title="Amount"class="is-flex is-justify-content-center">Unit Price</abbr></th>
+                            <th><abbr title="Unit Price"class="is-flex is-justify-content-center">Unit Price</abbr></th>
                             <th><abbr title="Quantity"class="is-flex is-justify-content-center">Quantity</abbr></th>
                             <th><abbr title="Total Price"class="is-flex is-justify-content-center">Total Price</abbr></th>
+                            <th><abbr title="Remarks"class="is-flex is-justify-content-center">Remarks</abbr></th>
                             <th><abbr title="Configuration"class="is-flex is-justify-content-center">Configuration</abbr></th>
                             </tr>
                         </thead>
@@ -174,7 +174,11 @@ $numberToWords = new NumberToWords();
 
                         </tbody>
                     </table>
-                    <button type="button" class="button is-responsive custom-background-color has-text-white is-pulled-right" onclick="generatefield()"><i class="fa-solid fa-plus"></i>&nbspAdd</button>
+                    <div class="sticky-container  is-pulled-right m-6">
+                        <button type="button" class="button is-responsive custom-background-color has-text-white sticky-button" onclick="generatefield()">
+                            <i class="fa-solid fa-plus"></i>&nbspAdd
+                        </button>
+                    </div>
                 </section>
                 <footer class="modal-card-foot is-justify-content-right">
                         <input type="submit" class="button is-success custom-background-color has-text-white" id="addbutton" name="save" value="Save"/>
@@ -272,8 +276,12 @@ function generatefield(){
     
     var addrow = requesttablebody.insertRow();
     var expenses_row = addrow.insertCell(0);
-    var amount_row = addrow.insertCell(1);
-    var delete_row = addrow.insertCell(2);
+    var unit_amount_row = addrow.insertCell(1);
+    var quantity_row = addrow.insertCell(2);
+    var total_price_row = addrow.insertCell(3);
+    var remarks_row = addrow.insertCell(4);
+    var delete_row = addrow.insertCell(5);
+
     delete_row.style.display = "flex";
     delete_row.style.justifyContent = "center";
     delete_row.style.alignContent = "center";
@@ -284,11 +292,30 @@ function generatefield(){
     expensesInput.classList.add('input', 'is-info');
     expensesInput.name = "expenses[]";
 
-    let amountInput = document.createElement("input");
-    amountInput.type= "number";
-    amountInput.placeholder = "Enter amount here";
-    amountInput.classList.add('input','is-info');
-    amountInput.name = "amount[]";
+    let unit_amount = document.createElement("input");
+    unit_amount.type= "number";
+    unit_amount.placeholder = "Enter amount here";
+    unit_amount.classList.add('input','is-info');
+    unit_amount.name = "amount[]";
+
+    let quantity = document.createElement("input");
+    quantity.type="number";
+    quantity.value = 1;
+    quantity.min = "1";
+    quantity.classList.add('input','is-info');
+    quantity.name="quantity[]";
+
+    let Total_price = document.createElement("input");
+    Total_price.type = "number"
+    Total_price.readOnly = true;
+    Total_price.classList.add('input','is-info');
+    Total_price.name = "Total_price[]";
+
+    let explanation = document.createElement("input");
+    explanation.type = "text";
+    explanation.classList.add('input','is-info');
+    explanation.placeholder = "Provide details here";
+    explanation.name = "explanation[]";
 
     let delete_button = document.createElement("button");
     delete_button.classList.add('button','has-background-danger', 'mx-1','my-2', 'mobile-view');
@@ -298,10 +325,38 @@ function generatefield(){
         addrow.remove();
     });
 
-    expenses_row.appendChild(expensesInput);
-    amount_row.appendChild(amountInput);
-    delete_row.appendChild(delete_button);
+    unit_amount.addEventListener("input", updateTotal);
+    quantity.addEventListener("input", updateTotal);
+
+    unit_amount.addEventListener("input",function(){
+        if(this.value<0){
+            this.value = 0;
+        };
+        updateTotal();
+    })
+    quantity.addEventListener("input", function(){
+        if(this.value <= 0){
+            this.value = 1;
+        }
+        updateTotal(); 
+    });
+
+    function updateTotal() {
+        let price = parseFloat(unit_amount.value) || 0;
+        let piece = parseFloat(quantity.value) || 1;
+        Total_price.value = price * piece;
     }
+
+    expenses_row.appendChild(expensesInput);
+    unit_amount_row.appendChild(unit_amount);
+    quantity_row.appendChild(quantity);
+    total_price_row.appendChild(Total_price);
+    remarks_row.appendChild(explanation);
+    delete_row.appendChild(delete_button);
+
+    updateTotal(); // Initialize total price correctly
+}
+
    
     //To still make interaction when Enter button is clicked
     function EnterButton(event){
@@ -393,9 +448,9 @@ if (isset($_POST['save'])) {
                 try{
                     $request_title = htmlspecialchars($title);
                     $total = 0;
-                for ($count_amount = 0; $count_amount < count($_POST['amount']); $count_amount++) {
-                    $_POST['amount'][$count_amount] = filter_var($_POST['amount'][$count_amount], FILTER_SANITIZE_NUMBER_INT);
-                    $total += (int) $_POST['amount'][$count_amount];
+                for ($count_amount = 0; $count_amount < count($_POST['Total_price']); $count_amount++) {
+                    $_POST['Total_price'][$count_amount] = filter_var($_POST['Total_price'][$count_amount], FILTER_SANITIZE_NUMBER_INT);
+                    $total += (int) $_POST['Total_price'][$count_amount];
                 }
                 $date_today = date("Y-m-d");
                 $status = "Pending Review";
@@ -410,6 +465,7 @@ if (isset($_POST['save'])) {
                 $prepare_tbl_request->bindParam(':deleted',$deleted);
                 $prepare_tbl_request->execute();
 
+
                 $sql_fetch_request_id = "SELECT request_id FROM tbl_request WHERE request_title = :title_request";
                 $fetch_request_id = $conn ->prepare($sql_fetch_request_id);
                 $fetch_request_id->bindParam(':title_request',$request_title);
@@ -418,11 +474,15 @@ if (isset($_POST['save'])) {
                 $fetch_request_id = $fetch_id['request_id']; 
 
                 for ($i = 0; $i < count($_POST['expenses']); $i++) {
-                 $sql_insert_breakdown = "INSERT INTO Request_Breakdown (request_breakdown_description, request_breakdown_amount, request_title_id) VALUES(:request_description, :request_description_amount, :request_title_id)";
+                    echo $_POST['Total_Price'][$i];
+                 $sql_insert_breakdown = "INSERT INTO Request_Breakdown (request_breakdown_description, request_unit_price, request_quantity, request_breakdown_amount, request_title_id, request_brief_description) VALUES(:request_description, :request_unit_price, :request_quantity, :request_description_amount, :request_title_id, :request_brief_description)";
                  $prepare_breakdown_request = $conn->prepare($sql_insert_breakdown);
                  $prepare_breakdown_request ->bindParam(':request_description',$_POST['expenses'][$i]);
-                 $prepare_breakdown_request ->bindParam(':request_description_amount', $_POST['amount'][$i]);
+                 $prepare_breakdown_request -> bindParam(':request_unit_price',$_POST['amount'][$i]);
+                 $prepare_breakdown_request -> bindParam(':request_quantity', $_POST['quantity'][$i]);
+                 $prepare_breakdown_request ->bindParam(':request_description_amount', $_POST['Total_Price'][$i]);
                  $prepare_breakdown_request ->bindParam(':request_title_id', $fetch_request_id);
+                 $prepare_breakdown_request ->bindParam(':request_brief_description', $_POST['explanation'][$i]);
                  $prepare_breakdown_request ->execute();
                 }
                 //Displaying a success message and updating the table content
@@ -437,6 +497,9 @@ if (isset($_POST['save'])) {
                     echo "<script>
                             swal('Error Inserting', 'Failed to Upload Request', 'error');
                           </script>";
+
+                    echo $e->getMessage();
+                    
                 }
             }    
         }

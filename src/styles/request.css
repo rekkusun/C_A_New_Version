@@ -50,7 +50,7 @@
     
     table {
         width: 100%;
-        min-width: 600px; /* Ensures proper scrolling */
+        min-width: 600px; 
     }
 }
 
@@ -65,4 +65,26 @@ html {
 
 body {
     -ms-overflow-style: none;
+}
+.modal-card{
+    width: 90%;
+}
+.sticky-container {
+    position: sticky;
+}
+
+.sticky-button {
+    position: fixed;
+}
+@media screen and (min-width: 1024px) {
+
+    .sticky-container {
+        position: sticky;
+        padding: 2rem;
+    }
+    .sticky-button {
+        position: fixed;
+       
+    }
+
 }
