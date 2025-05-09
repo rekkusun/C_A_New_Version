@@ -22,6 +22,14 @@ if(isset($_SESSION['username'])){
 use NumberToWords\NumberToWords;
 //Instantiate the NumberToWords class
 $numberToWords = new NumberToWords();
+
+//Fetching the count of the total number of request
+$fetch_no_request_count = "SELECT COUNT(*) FROM tbl_request WHERE deleted = :deleted";
+$prepare_count_request = $conn -> prepare($fetch_no_request_count);
+$prepare_count_request -> bindValue(':deleted',false);
+$prepare_count_request->execute();
+$count_of_request = $prepare_count_request->fetchColumn();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -60,7 +68,7 @@ $numberToWords = new NumberToWords();
         <div class="card custom-background-color">
                 <div class="card-content is-flex-direction-column is-justify-content-center is-align-content-center">
                     <p class="title">
-                        <p class=" title is-size-3 is-size-4-tablet has-text-centered has-text-white">100</p>
+                        <p class=" title is-size-3 is-size-4-tablet has-text-centered has-text-white"><?php echo $count_of_request?></p>
                     </p>
                     <p class="title has-text-centered is-size-4 is-size-5-tablet has-text-white p-4-tablet">
                         Total No. of Request
@@ -189,10 +197,12 @@ $numberToWords = new NumberToWords();
 </body>
 </html>
 <script>
+
  // Script for opening and closing the modal   
     var openmodal = document.getElementById('requesttrigger');
     var closemodal = document.getElementById('closebutton');
     var modal = document.getElementById('requestmodal');
+
 
 openmodal.addEventListener('click',function(){
     setTimeout(()=>{
@@ -205,8 +215,16 @@ closemodal.addEventListener('click', function(){
         modal.classList.remove('is-active','is-closing');
     },300);
 });
+
+document.getElementById('close_view_modal').addEventListener('click',function(){
+    document.getElementById('view_modal').classList.add('is-closing');
+    setTimeout(()=>{
+        document.getElementById('view_modal').remove('is-active','is-closing');
+    },300);
+})
+
 //function for generating a value from the javascript
-function addpending(title, date, status){
+function addpending(title, date, request_id, status){
     var pending_table = document.getElementById('pendingtable');
     var pending_table_body = document.getElementsByTagName('tbody')[0];
     var addrow = pending_table_body.insertRow();
@@ -219,30 +237,83 @@ function addpending(title, date, status){
     title_row.innerHTML = title;
     request_date.classList.add('has-text-centered');
     request_date.innerHTML = date;
+    
+    request_status_display = document.createElement("span");
+    request_status_display.classList.add('tag', 'is-primary','has-text-white');
+    request_status_display.textContent = status;
+
     request_status.classList.add('has-text-centered');
-    request_status.innerHTML = status;
+    request_status.appendChild(request_status_display);
 
     var remarksdiv = document.createElement("div");
     remarksdiv.classList.add('is-flex','is-justify-content-space-around','is-align-items-center');
     remarksdiv.style.gap = "0.25rem";
     var buttonClasses = ['button', 'is-small', 'is-flex', 'is-align-items-center'];
+   
+    let create_view_form = document.createElement("form");
+    create_view_form.action="";
+    create_view_form.method="post";
+    create_view_form.id="view_form";
+
     var view_button = document.createElement("button");
     view_button.classList.add(...buttonClasses,'is-link');
     view_button.innerHTML = '<div class="is-flex is-flex-direction-column"><i class="fa-solid fa-envelope-open-text" style="color: #ffffff;"></i><span class="has-text-white">View</span></div>';
     view_button.title = "View";
-    view_button.addEventListener("click", function(){
-        swal({
-            title: "File Opened",
-            text: "You open the file",
-            icon: "success",
-            button: "Okay",
+    view_button.name = "view_button["+request_id+"]";
+       view_button.addEventListener("click", function(){
+       let view_modal = document.createElement("div");
+       view_modal.classList.add('modal','is-active');
+       view_modal.id="view_modal";
+
+       let modal_bg = document.createElement("div");
+       modal_bg.classList.add("modal-background");
+       view_modal.appendChild(modal_bg);
+
+       let card_modal = document.createElement("div");
+       card_modal.classList.add('modal-card');
+       view_modal.appendChild(card_modal);
+
+       let header = document.createElement("header");
+       header.classList.add('modal-card-head');
+
+       let card_title = document.createElement("p");
+       card_title.classList.add('modal-card-title');
+       //card_title.textContent= -> This will be putted in php
+        header.appendChild(card_title);
+
+        let close_button = document.createElement("button");
+        close_button.classList.add('delete')
+        close_button.ariaLabel = "close";
+        close_button.addEventListener('click',function(){
+            view_modal.classList.add('is-closing');
+            setTimeout(()=>{
+                view_modal.classList.remove('is-active','is-closing');
+            },300);
         });
+        header.appendChild(close_button);
+        card_modal.appendChild(header);
+
+        let modal_section = document.createElement("section");
+        modal_section.classList.add('modal-card-body');
+        modal_section.appendChild(display_information()); //need to create a function that will create a table for the fetched cost Breakdown
+        card_modal.appendChild(modal_section);
+
+        let modal_footer = document.createElement("footer");
+        modal_footer.classList.add('modal-card-foot');
+
+        let button_modal = document.createElement("button");
+        button_modal.classList.add('button');
+        button_modal.innerHTML = <i class="fa-solid fa-pen" style="color: #ffffff;"></i> + "Edit" ;
     });
+
+    create_view_form.appendChild(view_button);
 
     var edit_button = document.createElement("button");
     edit_button.classList.add(...buttonClasses,'is-warning');
     edit_button.innerHTML = '<div class="is-flex is-flex-direction-column"><i class="fa-solid fa-file-pen" style="color: #ffffff;"></i><span class="has-text-white">Edit</span></div>';
     edit_button.title = "Edit";
+    edit_button.type="submit";
+    edit_button.name="edit_button["+request_id+"]";
     edit_button.addEventListener("click",function(){
         swal({
             title: "File Edited",
@@ -252,22 +323,53 @@ function addpending(title, date, status){
         });
     });
 
+    //This is for creating a delete form
+    let create_delete_form = document.createElement("form");
+    create_delete_form.method = "post";
+    create_delete_form.action = "";
+    create_delete_form.id="delete_form"
+
     var delete_button = document.createElement("button");
     delete_button.classList.add(...buttonClasses, 'is-danger');
     delete_button.innerHTML = '<div class="is-flex is-flex-direction-column"><i class="fa-regular fa-trash-can" style="color: #ffffff;"></i><span class="has-text-white">Delete</span></div>';
     delete_button.title = "Delete";
-    delete_button.addEventListener("click", function(){
+    delete_button.type = "submit";
+    delete_button.name = "delete_button["+request_id+"]";
+    delete_button.addEventListener("click",function(event){
+        event.preventDefault(); 
         swal({
-            title: "File Deleted",
-            text: "You deleted the file",
+            title: "Are you sure?",
+            text: "Once deleted, you will not be able to recover this request!",
             icon: "warning",
-            button: "Okay",
-        });
+            buttons: true,
+            dangerMode: true,
+            })
+            .then((willDelete) => {
+            if (willDelete) {
+                let form = document.createElement("form");
+                form.method="post";
+                form.action="";
+                
+                let hiddeninput = document.createElement("input");
+                hiddeninput.type="hidden";
+                hiddeninput.name = "delete_button["+request_id+"]";
+                hiddeninput.value = request_id;
+
+                form.appendChild(hiddeninput);
+                document.body.appendChild(form);
+                form.submit();
+            } else {}
+            });
     });
-    remarksdiv.appendChild(view_button);
+    create_delete_form.appendChild(delete_button);
+
+    remarksdiv.appendChild(create_view_form);
     remarksdiv.appendChild(edit_button);
-    remarksdiv.appendChild(delete_button);
+    remarksdiv.appendChild(create_delete_form);
     request_config.appendChild(remarksdiv);
+}
+function display_information(){
+    
 }
 //function for generating a new field for specific expenses and amount
 function generatefield(){
@@ -320,6 +422,7 @@ function generatefield(){
     let delete_button = document.createElement("button");
     delete_button.classList.add('button','has-background-danger', 'mx-1','my-2', 'mobile-view');
     delete_button.title = 'Remove';
+    delete_button.name = "delete_row";
     delete_button.innerHTML ='<i class="fa-regular fa-trash-can" style="color: #ffffff;"></i>';
     delete_button.addEventListener('click', function(){
         addrow.remove();
@@ -358,13 +461,19 @@ function generatefield(){
 }
 
    
-    //To still make interaction when Enter button is clicked
-    function EnterButton(event){
+//To still make interaction whenever the user presses the enter button
+function EnterButton(event){
         if(event.key ==='Enter'){
             let expensesCount = document.querySelectorAll('input[name="expenses[]"]');
-            let amountCount = document.querySelectorAll('input[name="amount[]"]');
+            let amountCount = document.querySelectorAll('input[name="Total_price[]"]');
+            let unitamountCount = document.querySelectorAll('input[name="amount[]"]');
+            let quantityCount = document.querySelectorAll('input[name="quantity[]"]');
+            let explanationCount = document.querySelectorAll('input[name="explanation[]"]');
            const expenses_count = expensesCount.length;
-           const amount_count = amountCount.length;
+           const Total_price = amountCount.length;
+           const unit_amount_count = unitamountCount.length;
+           const quantity_count = quantityCount.length;
+           const explanation_count = explanationCount.length;
 
             let form = document.getElementById('addbutton');
             if(form && form.tagName === 'FORM'){
@@ -372,33 +481,32 @@ function generatefield(){
                 form.submit();
             }
         }    
-    }
-    document.addEventListener('keydown', EnterButton);
-    document.getElementById('addbutton').addEventListener("click",function(){
-        location.reload();
-    });
+}
+document.addEventListener('keydown', EnterButton);
 
-    //For avoiding form resubmission when page refresh
-    if ( window.history.replaceState ) {
-        window.history.replaceState( null, null, window.location.href );
-    }
+
+//For avoiding form resubmission when page refresh
+if ( window.history.replaceState ) {
+    window.history.replaceState( null, null, window.location.href );
+}
 </script>
 <?php
 //Fetching Pending Request
 $fetch_pending = "SELECT * FROM tbl_request WHERE request_status = :status_request AND deleted = :deleted_file ORDER BY request_date DESC";
 $prepare_pending_request = $conn->prepare($fetch_pending);
 $prepare_pending_request->bindValue(':status_request',"Pending Review");
-$prepare_pending_request ->bindValue(':deleted_file',false);
+$prepare_pending_request->bindValue(':deleted_file',false);
 $prepare_pending_request->execute();
 $rows = $prepare_pending_request->fetchAll(PDO::FETCH_ASSOC);
+
 foreach($rows as $row){
    echo "<script>
         addpending('" . addslashes($row['request_title']) . "', 
                    '" . addslashes($row['request_date']) . "', 
-                   '" . addslashes($row['request_status']) . "');
+                   '" . addslashes($row['request_id']) . "',
+                   '" . addslashes($row['request_status'])."');
         </script>";
 }
-
 //User_Logout
 if(isset($_POST['logout'])){
     session_unset();
@@ -474,13 +582,12 @@ if (isset($_POST['save'])) {
                 $fetch_request_id = $fetch_id['request_id']; 
 
                 for ($i = 0; $i < count($_POST['expenses']); $i++) {
-                    echo $_POST['Total_Price'][$i];
                  $sql_insert_breakdown = "INSERT INTO Request_Breakdown (request_breakdown_description, request_unit_price, request_quantity, request_breakdown_amount, request_title_id, request_brief_description) VALUES(:request_description, :request_unit_price, :request_quantity, :request_description_amount, :request_title_id, :request_brief_description)";
                  $prepare_breakdown_request = $conn->prepare($sql_insert_breakdown);
                  $prepare_breakdown_request ->bindParam(':request_description',$_POST['expenses'][$i]);
                  $prepare_breakdown_request -> bindParam(':request_unit_price',$_POST['amount'][$i]);
                  $prepare_breakdown_request -> bindParam(':request_quantity', $_POST['quantity'][$i]);
-                 $prepare_breakdown_request ->bindParam(':request_description_amount', $_POST['Total_Price'][$i]);
+                 $prepare_breakdown_request ->bindParam(':request_description_amount', $_POST['Total_price'][$i]);
                  $prepare_breakdown_request ->bindParam(':request_title_id', $fetch_request_id);
                  $prepare_breakdown_request ->bindParam(':request_brief_description', $_POST['explanation'][$i]);
                  $prepare_breakdown_request ->execute();
@@ -505,5 +612,37 @@ if (isset($_POST['save'])) {
         }
         
     }
+
+    if(isset($_POST['delete_button'])&&$_SERVER["REQUEST_METHOD"] == "POST"){
+        foreach($_POST['delete_button']as $id=>$value){
+            try {
+                $delete_request = "UPDATE tbl_request SET deleted=:new_value WHERE request_id = :requested_delete";
+                $prepare_deletion = $conn->prepare($delete_request);
+                $prepare_deletion -> bindValue(':new_value',true);
+                $prepare_deletion -> bindValue(':requested_delete',$id);
+                $prepare_deletion->execute();
+                echo '<script>
+                    swal({
+                        title: "File Deleted",
+                        text: "You deleted the file successfully!",
+                        icon: "success",
+                        button: "Okay",
+                    }).then(() => {
+                        window.location.href = "requestor.php";
+                    });
+                </script>';
+            } catch (PDOException $e) {
+                echo '<script>
+                    swal({
+                        title: "Error!",
+                        text: "Unable to delete the file.",
+                        icon: "error",
+                        button: "Okay",
+                    });
+                </script>';
+            }
+        }
+    }
+
 
 ?>
