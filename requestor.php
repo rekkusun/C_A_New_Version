@@ -46,7 +46,7 @@ $count_of_request = $prepare_count_request->fetchColumn();
     <nav class="level p-4">
             <div class="level-center">
                 <div class="level-item">
-                    <h4 class="title is-2 is-5-mobile is-spaced custom-text-color"><?php echo "HI, ". $username?></h> 
+                    <h4 class="title is-2 is-5-mobile is-spaced custom-text-color"><?php echo "HI, ". $username?></> 
                 </div>
             </div>
             <div class="level-left">
@@ -156,7 +156,7 @@ $count_of_request = $prepare_count_request->fetchColumn();
     <form action="" id="requestForm" method="post">
         <div class="modal" id="requestmodal">
             <div class="modal-background"></div>
-            <div class="modal-card">
+            <div class="modal-card card_modal">
                 <header class="modal-card-head">
                     <p class="modal-card-title title is-3 custom-text-color">Request Form</p>
                     <button class="delete" id="closebutton"></button>
@@ -179,7 +179,6 @@ $count_of_request = $prepare_count_request->fetchColumn();
                             </tr>
                         </thead>
                         <tbody>
-
                         </tbody>
                     </table>
                     <div class="sticky-container  is-pulled-right m-6">
@@ -194,40 +193,71 @@ $count_of_request = $prepare_count_request->fetchColumn();
             </div>
         </div>
     </form>
+    <div class="modal" id="view_request">
+        <div class="modal-background"></div>
+        <div class="modal-card">
+        <header class="modal-card-head">
+            <p class="modal-card-title title is-3 custom-text-color" id="title_view"></p>
+            <button class="delete" id="close_button"></button>
+        </header>
+        <section class="modal-card-body">
+                <p class="title is-5 custom-text-color">Requested Amount</p>
+            <div class="m-1">
+                <p class="title is-6 custom-text-color">Amount in words: </p>
+                <p class="subtitle is-6 custom-text-color ml-5">One Hundred</p>
+                <p class="title is-6 custom-text-color">Amount in number:  </p>
+                <p class="subtitle is-6 custom-text-color ml-5" id="amount_number">100</p>
+            </div>
+            <p class="title is-5 custom-text-color mt-4">Breakdown of Expenses</p>
+                <table class="table is-fullwidth is-hoverable is-striped is-flex is-justify-content-center" id="view_table">
+                    <thead>
+                            <tr>
+                            <th><abbr title="Purpose" class="is-flex is-justify-content-center custom-text-color">Purpose</abbr></th>
+                            <th><abbr title="Unit Price"class="is-flex is-justify-content-center custom-text-color">Unit Price</abbr></th>
+                            <th><abbr title="Quantity"class="is-flex is-justify-content-center custom-text-color">Quantity</abbr></th>
+                            <th><abbr title="Total Price"class="is-flex is-justify-content-center custom-text-color">Total Price</abbr></th>
+                            <th><abbr title="Description"class="is-flex is-justify-content-center custom-text-color">Description</abbr></th>
+                            </tr>
+                    </thead>
+                  <tbody> </tbody>
+                </table>
+                <div class="sticky-container  is-pulled-right m-6">
+                    <button type="button" class="button is-responsive custom-background-color has-text-white sticky-button" onclick="generatefield()">
+                    <i class="fa-solid fa-file-pen" style="color: #ffffff;"></i>&nbspEdit
+                    </button>
+                </div>
+        </section>
+        </div>
+    </div>
 </body>
 </html>
 <script>
-
+       
+       var close_modal_view = document.getElementById('close_button');
+      var open_view_modal_view_request = document.getElementById('view_request');
  // Script for opening and closing the modal   
     var openmodal = document.getElementById('requesttrigger');
     var closemodal = document.getElementById('closebutton');
     var modal = document.getElementById('requestmodal');
-
-
+   
 openmodal.addEventListener('click',function(){
     setTimeout(()=>{
-        modal.classList.add('is-active');
-    });
+       modal.classList.add('is-active');
+    },500);
 });
 closemodal.addEventListener('click', function(){
     modal.classList.add('is-closing');
     setTimeout(()=>{
         modal.classList.remove('is-active','is-closing');
-    },300);
+    },500);
 });
-
-document.getElementById('close_view_modal').addEventListener('click',function(){
-    document.getElementById('view_modal').classList.add('is-closing');
-    setTimeout(()=>{
-        document.getElementById('view_modal').remove('is-active','is-closing');
-    },300);
-})
 
 //function for generating a value from the javascript
 function addpending(title, date, request_id, status){
     var pending_table = document.getElementById('pendingtable');
     var pending_table_body = document.getElementsByTagName('tbody')[0];
     var addrow = pending_table_body.insertRow();
+
     var title_row = addrow.insertCell(0);
     var request_date = addrow.insertCell(1);
     var request_status = addrow.insertCell(2);
@@ -260,51 +290,15 @@ function addpending(title, date, request_id, status){
     view_button.innerHTML = '<div class="is-flex is-flex-direction-column"><i class="fa-solid fa-envelope-open-text" style="color: #ffffff;"></i><span class="has-text-white">View</span></div>';
     view_button.title = "View";
     view_button.name = "view_button["+request_id+"]";
-       view_button.addEventListener("click", function(){
-       let view_modal = document.createElement("div");
-       view_modal.classList.add('modal','is-active');
-       view_modal.id="view_modal";
+    view_button.type="submit";
 
-       let modal_bg = document.createElement("div");
-       modal_bg.classList.add("modal-background");
-       view_modal.appendChild(modal_bg);
 
-       let card_modal = document.createElement("div");
-       card_modal.classList.add('modal-card');
-       view_modal.appendChild(card_modal);
-
-       let header = document.createElement("header");
-       header.classList.add('modal-card-head');
-
-       let card_title = document.createElement("p");
-       card_title.classList.add('modal-card-title');
-       //card_title.textContent= -> This will be putted in php
-        header.appendChild(card_title);
-
-        let close_button = document.createElement("button");
-        close_button.classList.add('delete')
-        close_button.ariaLabel = "close";
-        close_button.addEventListener('click',function(){
-            view_modal.classList.add('is-closing');
-            setTimeout(()=>{
-                view_modal.classList.remove('is-active','is-closing');
-            },300);
-        });
-        header.appendChild(close_button);
-        card_modal.appendChild(header);
-
-        let modal_section = document.createElement("section");
-        modal_section.classList.add('modal-card-body');
-        modal_section.appendChild(display_information()); //need to create a function that will create a table for the fetched cost Breakdown
-        card_modal.appendChild(modal_section);
-
-        let modal_footer = document.createElement("footer");
-        modal_footer.classList.add('modal-card-foot');
-
-        let button_modal = document.createElement("button");
-        button_modal.classList.add('button');
-        button_modal.innerHTML = <i class="fa-solid fa-pen" style="color: #ffffff;"></i> + "Edit" ;
-    });
+    close_modal_view.addEventListener('click',function(){
+    open_view_modal_view_request.classList.add('is-closing');
+    setTimeout(()=>{
+        open_view_modal_view_request.classList.remove('is-active','is-closing');
+    },300);
+})
 
     create_view_form.appendChild(view_button);
 
@@ -368,9 +362,32 @@ function addpending(title, date, request_id, status){
     remarksdiv.appendChild(create_delete_form);
     request_config.appendChild(remarksdiv);
 }
-function display_information(){
+function display_information(purpose, unit_price, quantity, total, description){
+    var view_table = document.getElementById('view_table');
     
+    if (!view_table) {
+        console.error("Table with ID 'view_table' not found.");
+        return;
+    }
+
+    var view_table_body = view_table.querySelector('tbody');
+    
+    if (!view_table_body) {
+        console.error("No <tbody> found inside 'view_table'.");
+        return;
+    }
+
+    var add_row = view_table_body.insertRow();
+
+    var cellData = [purpose, unit_price, quantity, total, description];
+
+    cellData.forEach((data, index) => {
+        var cell = add_row.insertCell(index);
+        cell.textContent = data; // Ensures safe text insertion
+        cell.classList.add('has-text-centered', 'custom-text-color');
+    });
 }
+
 //function for generating a new field for specific expenses and amount
 function generatefield(){
     var requesttable = document.getElementById('requesttable');
@@ -644,5 +661,31 @@ if (isset($_POST['save'])) {
         }
     }
 
-
+    if(isset($_POST['view_button'])){
+        foreach($_POST['view_button'] as $id=>$value){
+            try{
+                $Select_Request = "SELECT * FROM Request_Breakdown WHERE request_title_id = :requested_id";
+                $prepare_selection = $conn->prepare($Select_Request);
+                $prepare_selection->bindValue(':requested_id', $id, PDO::PARAM_INT);
+                $prepare_selection->execute();
+                $fetched_data = $prepare_selection->fetchAll(PDO::FETCH_ASSOC);
+                //DITO MAGCREATE NG TABLE insterad in javascript function
+                foreach($fetched_data as $row){
+                    echo "<script>
+                        display_information(
+                            " . json_encode(addslashes($row['request_breakdown_description'])) . ", 
+                            " . json_encode($row['request_unit_price']) . ", 
+                            " . json_encode($row['request_quantity']) . ", 
+                            " . json_encode($row['request_breakdown_amount']) . ", 
+                            " . json_encode(addslashes($row['request_brief_description'])) . "
+                        );
+                        open_view_modal_view_request.classList.add('is-active');
+                    </script>";
+                }
+            } catch(PDOException $e){
+                echo "<script>console.error('Database Error: " . addslashes($e->getMessage()) . "');</script>";
+            }
+        }
+    }
+    
 ?>
