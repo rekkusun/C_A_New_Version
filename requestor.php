@@ -19,9 +19,6 @@ if(isset($_SESSION['username'])){
     header("Location: login.php");
     exit();
 }
-use NumberToWords\NumberToWords;
-//Instantiate the NumberToWords class
-$numberToWords = new NumberToWords();
 
 //Fetching the count of the total number of request
 $fetch_no_request_count = "SELECT COUNT(*) FROM tbl_request WHERE deleted = :deleted";
@@ -195,31 +192,32 @@ $count_of_request = $prepare_count_request->fetchColumn();
     </form>
     <div class="modal" id="view_request">
         <div class="modal-background"></div>
-        <div class="modal-card">
+        <div class="modal-card card_modal">
         <header class="modal-card-head">
             <p class="modal-card-title title is-3 custom-text-color" id="title_view"></p>
             <button class="delete" id="close_button"></button>
         </header>
         <section class="modal-card-body">
-                <p class="title is-5 custom-text-color">Requested Amount</p>
-            <div class="m-1">
-                <p class="title is-6 custom-text-color">Amount in words: </p>
-                <p class="subtitle is-6 custom-text-color ml-5">One Hundred</p>
-                <p class="title is-6 custom-text-color">Amount in number:  </p>
-                <p class="subtitle is-6 custom-text-color ml-5" id="amount_number">100</p>
+                <p class="title is-5">Requested Amount</p>
+            <div class="m-4">
+                <p class="title is-6">Amount in words: </p>
+                <p class="subtitle is-6 ml-5 has-text-weight-medium mb-3" id="amount_words"></p>
+                <p class="title is-6">Amount in number:  </p>
+                <p class="subtitle is-6 ml-5 has-text-weight-medium" id="amount_number"></p>
             </div>
-            <p class="title is-5 custom-text-color mt-4">Breakdown of Expenses</p>
-                <table class="table is-fullwidth is-hoverable is-striped is-flex is-justify-content-center" id="view_table">
+            <p class="title is-5 mt-4">Breakdown of Expenses</p>
+                <table class="table is-fullwidth is-hoverable is-striped" id="view_table">
                     <thead>
                             <tr>
-                            <th><abbr title="Purpose" class="is-flex is-justify-content-center custom-text-color">Purpose</abbr></th>
-                            <th><abbr title="Unit Price"class="is-flex is-justify-content-center custom-text-color">Unit Price</abbr></th>
-                            <th><abbr title="Quantity"class="is-flex is-justify-content-center custom-text-color">Quantity</abbr></th>
-                            <th><abbr title="Total Price"class="is-flex is-justify-content-center custom-text-color">Total Price</abbr></th>
-                            <th><abbr title="Description"class="is-flex is-justify-content-center custom-text-color">Description</abbr></th>
+                            <th><abbr title="Purpose" class="is-flex is-justify-content-center">Purpose</abbr></th>
+                            <th><abbr title="Unit Price"class="is-flex is-justify-content-center">Unit Price</abbr></th>
+                            <th><abbr title="Quantity"class="is-flex is-justify-content-center">Quantity</abbr></th>
+                            <th><abbr title="Total Price"class="is-flex is-justify-content-center">Total Price</abbr></th>
+                            <th><abbr title="Description"class="is-flex is-justify-content-center">Description</abbr></th>
                             </tr>
                     </thead>
-                  <tbody> </tbody>
+                    <tbody>
+                    </tbody>
                 </table>
                 <div class="sticky-container  is-pulled-right m-6">
                     <button type="button" class="button is-responsive custom-background-color has-text-white sticky-button" onclick="generatefield()">
@@ -233,8 +231,8 @@ $count_of_request = $prepare_count_request->fetchColumn();
 </html>
 <script>
        
-       var close_modal_view = document.getElementById('close_button');
-      var open_view_modal_view_request = document.getElementById('view_request');
+var close_modal_view = document.getElementById('close_button');
+var open_view_modal_view_request = document.getElementById('view_request');
  // Script for opening and closing the modal   
     var openmodal = document.getElementById('requesttrigger');
     var closemodal = document.getElementById('closebutton');
@@ -362,6 +360,7 @@ function addpending(title, date, request_id, status){
     remarksdiv.appendChild(create_delete_form);
     request_config.appendChild(remarksdiv);
 }
+//function for inserting contents for the table in view request
 function display_information(purpose, unit_price, quantity, total, description){
     var view_table = document.getElementById('view_table');
     
@@ -370,7 +369,7 @@ function display_information(purpose, unit_price, quantity, total, description){
         return;
     }
 
-    var view_table_body = view_table.querySelector('tbody');
+    var view_table_body = document.getElementsByTagName('tbody')[3];
     
     if (!view_table_body) {
         console.error("No <tbody> found inside 'view_table'.");
@@ -379,13 +378,26 @@ function display_information(purpose, unit_price, quantity, total, description){
 
     var add_row = view_table_body.insertRow();
 
-    var cellData = [purpose, unit_price, quantity, total, description];
+    var purpose_row = add_row.insertCell(0);
+    var unit_price_row = add_row.insertCell(1);
+    var quantity_row = add_row.insertCell(2);
+    var total_row = add_row.insertCell(3);
+    var description_row = add_row.insertCell(4);
 
-    cellData.forEach((data, index) => {
-        var cell = add_row.insertCell(index);
-        cell.textContent = data; // Ensures safe text insertion
-        cell.classList.add('has-text-centered', 'custom-text-color');
-    });
+    purpose_row.classList.add('has-text-centered', 'custom-text-color');
+    purpose_row.innerHTML=purpose;
+
+    unit_price_row.classList.add('has-text-centered', 'custom-text-color');
+    unit_price_row.innerHTML=unit_price;
+
+    quantity_row.classList.add('has-text-centered','custom-text-color');
+    quantity_row.innerHTML=quantity;
+
+    total_row.classList.add('has-text-centered','custom-text-color');
+    total_row.innerHTML=total;
+
+    description_row.classList.add('has-text-centered','custom-text-color');
+    description_row.innerHTML=description;
 }
 
 //function for generating a new field for specific expenses and amount
@@ -501,13 +513,31 @@ function EnterButton(event){
 }
 document.addEventListener('keydown', EnterButton);
 
+//function for setting modal_title and total amount
+function insert_text(amount, amount_in_words, title){
+    var get_title_view = document.getElementById('title_view');
+    var get_amount_words = document.getElementById('amount_words');
+    var get_amount_number = document.getElementById('amount_number');
+    
+    get_title_view.innerHTML=title;
+    get_amount_words.innerHTML=amount_in_words;
+    get_amount_number.innerHTML=amount;
+}
 
 //For avoiding form resubmission when page refresh
 if ( window.history.replaceState ) {
     window.history.replaceState( null, null, window.location.href );
 }
 </script>
+<!--End of Javascript-->
 <?php
+//This is use to convert numbers into words
+  use NumberToWords\NumberToWords;
+  //Instantiate the NumberToWords class
+  $numberToWords = new NumberToWords();
+  $numberToWords=$numberToWords->getNumberTransformer('en');
+
+
 //Fetching Pending Request
 $fetch_pending = "SELECT * FROM tbl_request WHERE request_status = :status_request AND deleted = :deleted_file ORDER BY request_date DESC";
 $prepare_pending_request = $conn->prepare($fetch_pending);
@@ -664,6 +694,21 @@ if (isset($_POST['save'])) {
     if(isset($_POST['view_button'])){
         foreach($_POST['view_button'] as $id=>$value){
             try{
+                //Code to get the purpose of request and displaying it in the modal
+                $Select_Title = "SELECT request_title, request_total_amount FROM tbl_request WHERE request_id = :requested_id";
+                $prepare_select_title = $conn->prepare($Select_Title);
+                $prepare_select_title->bindParam(':requested_id',$id);
+                $prepare_select_title->execute();
+                $fetched_title =$prepare_select_title->fetch(PDO::FETCH_ASSOC);
+
+                $converted_word =  ucwords($numberToWords->toWords($fetched_title['request_total_amount'])) . " Pesos";
+                echo "<script>
+                insert_text(" . json_encode($fetched_title['request_total_amount']) . ", 
+                            " . json_encode($converted_word) . ", 
+                            " . json_encode($fetched_title['request_title']) . ");
+                    </script>";
+
+               
                 $Select_Request = "SELECT * FROM Request_Breakdown WHERE request_title_id = :requested_id";
                 $prepare_selection = $conn->prepare($Select_Request);
                 $prepare_selection->bindValue(':requested_id', $id, PDO::PARAM_INT);
