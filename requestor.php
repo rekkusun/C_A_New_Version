@@ -37,6 +37,7 @@ $count_of_request = $prepare_count_request->fetchColumn();
     <link rel="stylesheet" href="src/styles/request.css">
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://kit.fontawesome.com/1e5b2dce42.js" crossorigin="anonymous"></script>
+    <!--script type="text/javascript" src="/path/to/numberToWords.min.js"></script-->
     <title>SmartPark Systems Solutions Cash Advance</title>
 </head>
 <body>
@@ -104,7 +105,7 @@ $count_of_request = $prepare_count_request->fetchColumn();
             <div class="box">
             <h3 class="title is-5 custom-text-color">Pending request</h3>
             <div class="table-container">
-                <table class="table is-fullwidth is-striped" id="pendingtable">
+                <table class="table is-fullwidth is-striped is-hoverable" id="pendingtable">
                     <thead>
                         <tr>
                             <th class="has-text-centered">Request Title</th>
@@ -121,13 +122,12 @@ $count_of_request = $prepare_count_request->fetchColumn();
                 <button class="button is-responsive custom-background-color has-text-white" id="requesttrigger" data-target="request-form-modal"><i class="fa-solid fa-plus"></i>&nbspAdd</button>
                 </div>     
             </div>
-       
         </div>
         <div class="column">
             <div class="box">
                 <h3 class="title is-5 custom-text-color">Approved requests</h3>
                 <div class="table-container">
-                    <table class="table is-fullwidth is-striped">
+                    <table class="table is-fullwidth is-hoverable is-striped">
                         <thead>
                             <tr>
                                 <th class="has-text-centered">Request Title</th>
@@ -150,6 +150,7 @@ $count_of_request = $prepare_count_request->fetchColumn();
         </div>
     </div>
     </div>
+    <!--Create Request Modal-->
     <form action="" id="requestForm" method="post">
         <div class="modal" id="requestmodal">
             <div class="modal-background"></div>
@@ -164,7 +165,7 @@ $count_of_request = $prepare_count_request->fetchColumn();
                     <input class="input" type="text" name="title_request" id="title_request" placeholder="Purpose of Request">
                     </div>
                     <h6 class="title is-6 custom-text-color">Breakdown of Expenses</h6>
-                    <table class="table is-fullwidth" id="requesttable">
+                    <table class="table is-fullwidth is-hoverable" id="requesttable">
                         <thead>
                             <tr>
                             <th><abbr title="Expenses" class="is-flex is-justify-content-center">Expense Summary</abbr></th>
@@ -184,12 +185,13 @@ $count_of_request = $prepare_count_request->fetchColumn();
                         </button>
                     </div>
                 </section>
-                <footer class="modal-card-foot is-justify-content-right">
+                <footer class="modal-card-foot">
                         <input type="submit" class="button is-success custom-background-color has-text-white" id="addbutton" name="save" value="Save"/>
                 </footer>
             </div>
         </div>
     </form>
+    <!--View modal-->
     <div class="modal" id="view_request">
         <div class="modal-background"></div>
         <div class="modal-card card_modal">
@@ -198,7 +200,7 @@ $count_of_request = $prepare_count_request->fetchColumn();
             <button class="delete" id="close_button"></button>
         </header>
         <section class="modal-card-body">
-                <p class="title is-5">Requested Amount</p>
+            <p class="title is-5">Requested Amount</p>
             <div class="m-4">
                 <p class="title is-6">Amount in words: </p>
                 <p class="subtitle is-6 ml-5 has-text-weight-medium mb-3" id="amount_words"></p>
@@ -208,35 +210,103 @@ $count_of_request = $prepare_count_request->fetchColumn();
             <p class="title is-5 mt-4">Breakdown of Expenses</p>
                 <table class="table is-fullwidth is-hoverable is-striped" id="view_table">
                     <thead>
-                            <tr>
+                        <tr>
                             <th><abbr title="Purpose" class="is-flex is-justify-content-center">Purpose</abbr></th>
                             <th><abbr title="Unit Price"class="is-flex is-justify-content-center">Unit Price</abbr></th>
                             <th><abbr title="Quantity"class="is-flex is-justify-content-center">Quantity</abbr></th>
                             <th><abbr title="Total Price"class="is-flex is-justify-content-center">Total Price</abbr></th>
                             <th><abbr title="Description"class="is-flex is-justify-content-center">Description</abbr></th>
-                            </tr>
+                        </tr>
                     </thead>
                     <tbody>
                     </tbody>
                 </table>
-                <div class="sticky-container  is-pulled-right m-6">
-                    <button type="button" class="button is-responsive custom-background-color has-text-white sticky-button" onclick="generatefield()">
-                    <i class="fa-solid fa-file-pen" style="color: #ffffff;"></i>&nbspEdit
-                    </button>
-                </div>
         </section>
+        <footer class="modal-card-foot" id="viewing_footer">
+            <button type="button" class="button is-responsive custom-background-color has-text-white" name="edit_modal_open">
+                <i class="fa-solid fa-file-pen" style="color: #ffffff;"></i>&nbsp&nbspEdit
+            </button>
+        </footer>
         </div>
     </div>
+    <!--Edit modal-->
+    <form action="" method="post" id="edit_request_form">
+        <div class="modal" id="edit_modal">
+            <div class="modal-background"></div>
+            <div class="modal-card card_modal">
+                <header class="modal-card-head">
+                    <div class="modal-card-title">
+                    <input type="text" class="input is-large is-info title is-3 custom-text-color"id="edit_title">
+                    </div>
+                    <!--p class="modal-card-title title is-3 custom-text-color" id="edit_title"></p-->
+                    <button class="delete" id="close_edit_button"></button>
+                </header>
+                <section class="modal-card-body">
+                    <p class="title is-5">Requested Amount</p>
+                    <div class="m-4">
+                        <p class="title is-6">Amount in words: </p>
+                        <p class="subtitle is-6 ml-5 has-text-weight-medium mb-3" id="amount_words_edit"></p>
+                        <p class="title is-6">Amount in number:  </p>
+                        <p class="subtitle is-6 ml-5 has-text-weight-medium" id="amount_number_edit"></p>
+                    </div>
+                    <table class="table is-fullwidth is-striped is-hoverable" id="edit_table">
+                        <thead>
+                            <tr>
+                                <th><abbr title="Purpose" class="is-flex is-justify-content-center">Purpose</abbr></th>
+                                <th><abbr title="Unit Price"class="is-flex is-justify-content-center">Unit Price</abbr></th>
+                                <th><abbr title="Quantity"class="is-flex is-justify-content-center">Quantity</abbr></th>
+                                <th><abbr title="Total Price"class="is-flex is-justify-content-center">Total Price</abbr></th>
+                                <th><abbr title="Description"class="is-flex is-justify-content-center">Description</abbr></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </section>
+                <footer class="modal-card-foot">
+                    <button type="button" class="button is-reponsive custom-background-color has-text-white">
+                    <i class="fa-solid fa-floppy-disk" style="color: #ffffff;"></i>&nbsp&nbspSave
+                    </button>
+                </footer>
+            </div>
+        </div>
+    </form>
 </body>
 </html>
+<!--End of html-->
+
 <script>
-       
+
+var button_edit = document.querySelector('[name=edit_modal_open]');
+
+//For Edit Modal   
+var edit_modal_close = document.getElementById('close_edit_button');
+var open_edit_modal = document.getElementById('edit_modal');
+
+edit_modal_close.addEventListener('click',function(){
+    open_edit_modal.classList.add('is-closing');
+    setTimeout(()=>{
+        open_edit_modal.classList.remove('is-active','is-closing');
+    },300);
+});
+
+//initialized the modal for viewing globally to be accessible also by php  
 var close_modal_view = document.getElementById('close_button');
 var open_view_modal_view_request = document.getElementById('view_request');
- // Script for opening and closing the modal   
-    var openmodal = document.getElementById('requesttrigger');
-    var closemodal = document.getElementById('closebutton');
-    var modal = document.getElementById('requestmodal');
+
+close_modal_view.addEventListener('click',function(){
+    open_view_modal_view_request.classList.add('is-closing');
+    setTimeout(()=>{
+        open_view_modal_view_request.classList.remove('is-active','is-closing');
+    },300);
+});
+
+
+
+// Script for opening and closing the modal   
+var openmodal = document.getElementById('requesttrigger');
+var closemodal = document.getElementById('closebutton');
+var modal = document.getElementById('requestmodal');
    
 openmodal.addEventListener('click',function(){
     setTimeout(()=>{
@@ -261,6 +331,9 @@ function addpending(title, date, request_id, status){
     var request_status = addrow.insertCell(2);
     var request_config = addrow.insertCell(3);
 
+    //assigning an id to the button 
+    button_edit.id="button_edit_view["+request_id+"]";
+    
     title_row.classList.add('has-text-centered');
     title_row.innerHTML = title;
     request_date.classList.add('has-text-centered');
@@ -289,16 +362,12 @@ function addpending(title, date, request_id, status){
     view_button.title = "View";
     view_button.name = "view_button["+request_id+"]";
     view_button.type="submit";
-
-
-    close_modal_view.addEventListener('click',function(){
-    open_view_modal_view_request.classList.add('is-closing');
-    setTimeout(()=>{
-        open_view_modal_view_request.classList.remove('is-active','is-closing');
-    },300);
-})
-
     create_view_form.appendChild(view_button);
+
+    let edit_view_form = document.createElement("form");
+    edit_view_form.action="";
+    edit_view_form.method ="post";
+    edit_view_form.id="edit_form";
 
     var edit_button = document.createElement("button");
     edit_button.classList.add(...buttonClasses,'is-warning');
@@ -306,14 +375,7 @@ function addpending(title, date, request_id, status){
     edit_button.title = "Edit";
     edit_button.type="submit";
     edit_button.name="edit_button["+request_id+"]";
-    edit_button.addEventListener("click",function(){
-        swal({
-            title: "File Edited",
-            text: "You open the file",
-            icon: "success",
-            button: "Okay",
-        });
-    });
+    edit_view_form.appendChild(edit_button);
 
     //This is for creating a delete form
     let create_delete_form = document.createElement("form");
@@ -356,21 +418,21 @@ function addpending(title, date, request_id, status){
     create_delete_form.appendChild(delete_button);
 
     remarksdiv.appendChild(create_view_form);
-    remarksdiv.appendChild(edit_button);
+    remarksdiv.appendChild(edit_view_form);
     remarksdiv.appendChild(create_delete_form);
     request_config.appendChild(remarksdiv);
 }
+
 //function for inserting contents for the table in view request
 function display_information(purpose, unit_price, quantity, total, description){
+   //verfiying if table exist
     var view_table = document.getElementById('view_table');
-    
     if (!view_table) {
         console.error("Table with ID 'view_table' not found.");
         return;
     }
-
+  // verifying if table body exist
     var view_table_body = document.getElementsByTagName('tbody')[3];
-    
     if (!view_table_body) {
         console.error("No <tbody> found inside 'view_table'.");
         return;
@@ -403,9 +465,9 @@ function display_information(purpose, unit_price, quantity, total, description){
 //function for generating a new field for specific expenses and amount
 function generatefield(){
     var requesttable = document.getElementById('requesttable');
-    var requesttablebody = document.getElementsByTagName('tbody')[2];
-    
+    var requesttablebody = document.getElementsByTagName('tbody')[2];   
     var addrow = requesttablebody.insertRow();
+
     var expenses_row = addrow.insertCell(0);
     var unit_amount_row = addrow.insertCell(1);
     var quantity_row = addrow.insertCell(2);
@@ -488,8 +550,16 @@ function generatefield(){
 
     updateTotal(); // Initialize total price correctly
 }
+/*function assign_button(id){
+    <button type="button" class="button is-responsive custom-background-color has-text-white" name="edit_modal_open">
+        <i class="fa-solid fa-file-pen" style="color: #ffffff;"></i>&nbsp&nbspEdit
+    </button>
 
-   
+    var get_view_footer = document.getElementById('viewing_footer');
+    var create_button = document.createElement("button");
+    
+}
+   */
 //To still make interaction whenever the user presses the enter button
 function EnterButton(event){
         if(event.key ==='Enter'){
@@ -524,6 +594,74 @@ function insert_text(amount, amount_in_words, title){
     get_amount_number.innerHTML=amount;
 }
 
+//function to display edit_title and amount
+function edit_modal_content( modal_title, amount_number, amount_words){  
+    var title_modal = document.getElementById('edit_title');
+    var modal_number = document.getElementById('amount_number_edit');
+    var modal_words = document.getElementById('amount_words_edit');
+
+    title_modal.value=modal_title;
+    modal_number.innerHTML=amount_number;
+    modal_words.innerHTML=amount_words;
+}
+
+//function for creating fields intended for modal update
+function generate_edit_fields(purpose, unit_price, quantity, total, description){
+    
+    var edit_table = document.getElementById('edit_table');
+    var edit_table_body = document.getElementsByTagName('tbody')[4];
+    var add_edit_row = edit_table_body.insertRow();
+
+    var edit_purpose_row = add_edit_row.insertCell(0);
+    var unit_price_row = add_edit_row.insertCell(1);
+    var quantity_row = add_edit_row.insertCell(2);
+    var total_row = add_edit_row.insertCell(3);
+    var description_row = add_edit_row.insertCell(4);
+    var configuration_row = add_edit_row.insertCell(5);
+
+    let purpose_input = document.createElement("input");
+    purpose_input.type ="text";
+    purpose_input.value=purpose;
+    purpose_input.classList.add('input','is-info');
+
+    let unit_price_input = document.createElement("input");
+    unit_price_input.type = "number";
+    unit_price_input.value=unit_price;
+    unit_price_input.classList.add('input','is-info');
+
+    let quantity_input = document.createElement("input");
+    quantity_input.type="number";
+    quantity_input.value=quantity;
+    quantity_input.classList.add('input','is-info');
+
+    let total_input = document.createElement("input");
+    total_input.type ="number";
+    total_input.value=total;
+    total_input.readOnly=true
+    total_input.classList.add('input','is-info');
+
+    let description_input = document.createElement("input");
+    description_input.type="text";
+    description_input.value=description;
+    description_input.classList.add('input','is-info');
+
+    let configuration_button = document.createElement("button");
+    configuration_button.classList.add('button','is-danger','is-small',);
+    configuration_button.title = 'Remove';
+    configuration_button.innerHTML ='<i class="fa-regular fa-trash-can" style="color: #ffffff;"></i>';
+
+    let config_div = document.createElement("div");
+    config_div.classList.add('is-flex','is-justify-content-center','is-align-items-center','mt-3');
+    config_div.appendChild(configuration_button);
+
+    edit_purpose_row.appendChild(purpose_input);
+    unit_price_row.appendChild(unit_price_input);
+    quantity_row.appendChild(quantity_input);
+    total_row.appendChild(total_input);
+    description_row.appendChild(description_input);
+    configuration_row.appendChild(config_div);
+}
+
 //For avoiding form resubmission when page refresh
 if ( window.history.replaceState ) {
     window.history.replaceState( null, null, window.location.href );
@@ -546,6 +684,7 @@ $prepare_pending_request->bindValue(':deleted_file',false);
 $prepare_pending_request->execute();
 $rows = $prepare_pending_request->fetchAll(PDO::FETCH_ASSOC);
 
+//Displaying list of request
 foreach($rows as $row){
    echo "<script>
         addpending('" . addslashes($row['request_title']) . "', 
@@ -554,6 +693,7 @@ foreach($rows as $row){
                    '" . addslashes($row['request_status'])."');
         </script>";
 }
+
 //User_Logout
 if(isset($_POST['logout'])){
     session_unset();
@@ -690,7 +830,7 @@ if (isset($_POST['save'])) {
             }
         }
     }
-
+    //Viewing of specific request
     if(isset($_POST['view_button'])){
         foreach($_POST['view_button'] as $id=>$value){
             try{
@@ -708,13 +848,13 @@ if (isset($_POST['save'])) {
                             " . json_encode($fetched_title['request_title']) . ");
                     </script>";
 
-               
                 $Select_Request = "SELECT * FROM Request_Breakdown WHERE request_title_id = :requested_id";
                 $prepare_selection = $conn->prepare($Select_Request);
                 $prepare_selection->bindValue(':requested_id', $id, PDO::PARAM_INT);
                 $prepare_selection->execute();
                 $fetched_data = $prepare_selection->fetchAll(PDO::FETCH_ASSOC);
-                //DITO MAGCREATE NG TABLE insterad in javascript function
+                
+                //Code to pass the fetched data to js through json
                 foreach($fetched_data as $row){
                     echo "<script>
                         display_information(
@@ -730,6 +870,46 @@ if (isset($_POST['save'])) {
             } catch(PDOException $e){
                 echo "<script>console.error('Database Error: " . addslashes($e->getMessage()) . "');</script>";
             }
+        }
+    }
+    //For viewing the request to be edited
+    if(isset($_POST['edit_button'])){
+        foreach($_POST['edit_button'] as $id=>$value){
+            try{
+                //Code to get the purpose of request and displaying it in the modal
+                $Select_Title = "SELECT request_title, request_total_amount FROM tbl_request WHERE request_id = :requested_id";
+                $prepare_select_title = $conn->prepare($Select_Title);
+                $prepare_select_title->bindParam(':requested_id',$id);
+                $prepare_select_title->execute();
+                $fetched_title =$prepare_select_title->fetch(PDO::FETCH_ASSOC);
+
+                $converted_word =  ucwords($numberToWords->toWords($fetched_title['request_total_amount'])) . " Pesos";
+                echo "<script>
+                edit_modal_content(" . json_encode($fetched_title['request_title']) . ", 
+                            " . json_encode($fetched_title['request_total_amount']) . ", 
+                            " . json_encode($converted_word) . ");
+                    open_edit_modal.classList.add('is-active');
+                    </script>";
+                
+                $Select_breakdown = "SELECT * FROM Request_Breakdown WHERE request_title_id=:requested_id";
+                $prepare_breakdown = $conn->prepare($Select_breakdown);
+                $prepare_breakdown->bindParam(':requested_id',$id);
+                $prepare_breakdown->execute();
+                $fetched_breakdown = $prepare_breakdown->fetchAll(PDO::FETCH_ASSOC);
+                
+                foreach($fetched_breakdown as $data){
+                    echo "<script>
+                            generate_edit_fields(".json_encode(addslashes($data['request_breakdown_description'])).', '
+                                                  .addslashes($data['request_unit_price']).', '
+                                                  .addslashes($data['request_quantity']).', '
+                                                  .addslashes($data['request_breakdown_amount']).', '
+                                                  .json_encode(addslashes($data['request_brief_description'])).");
+                         </script>";
+                }
+            }catch(PDOException $e){
+                echo "<script>console.error('Database Error: " . addslashes($e->getMessage()) . "');</script>";
+            }
+            
         }
     }
     
