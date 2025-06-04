@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "number-to-words": "^1.2.4"
+    "number-to-words": "^1.2.4",
+    "to-words": "^4.5.1",
+    "vite": "^6.3.5"
   }
 }

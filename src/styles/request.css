@@ -69,7 +69,7 @@ body {
 .card_modal{
     width: 90%;
 }
-.sticky-container {
+/*.sticky-container {
     position: sticky;
 }
 
@@ -87,7 +87,7 @@ body {
        
     }
 
-}
+}*/
 #edit_title{
     max-width: 50%;
 }

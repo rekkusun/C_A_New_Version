@@ -1,4 +1,6 @@
 <?php
+
+use Symfony\Component\Console\Helper\FormatterHelper;
 session_set_cookie_params(3600);
 session_start();
 require 'vendor/autoload.php';
@@ -37,7 +39,7 @@ $count_of_request = $prepare_count_request->fetchColumn();
     <link rel="stylesheet" href="src/styles/request.css">
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script src="https://kit.fontawesome.com/1e5b2dce42.js" crossorigin="anonymous"></script>
-    <!--script type="text/javascript" src="/path/to/numberToWords.min.js"></script-->
+   <!--script type="module" src="src/js/numberConverter.js"></script-->
     <title>SmartPark Systems Solutions Cash Advance</title>
 </head>
 <body>
@@ -179,14 +181,16 @@ $count_of_request = $prepare_count_request->fetchColumn();
                         <tbody>
                         </tbody>
                     </table>
-                    <div class="sticky-container  is-pulled-right m-6">
+                    <div class="sticky-container ">
                         <button type="button" class="button is-responsive custom-background-color has-text-white sticky-button" onclick="generatefield()">
-                            <i class="fa-solid fa-plus"></i>&nbspAdd
+                            Add Breakdown&nbsp<i class="fa-solid fa-plus"></i>
                         </button>
-                    </div>
+                    </div>  
                 </section>
                 <footer class="modal-card-foot">
-                        <input type="submit" class="button is-success custom-background-color has-text-white" id="addbutton" name="save" value="Save"/>
+                    <button type="submit" class="button is-success custom-background-color has-text-white" id="addbutton" name="save">
+                        <i class="fa-solid fa-floppy-disk" style="color: #ffffff;"></i>&nbsp;Save
+                    </button>
                 </footer>
             </div>
         </div>
@@ -223,9 +227,6 @@ $count_of_request = $prepare_count_request->fetchColumn();
                 </table>
         </section>
         <footer class="modal-card-foot" id="viewing_footer">
-            <button type="button" class="button is-responsive custom-background-color has-text-white" name="edit_modal_open">
-                <i class="fa-solid fa-file-pen" style="color: #ffffff;"></i>&nbsp&nbspEdit
-            </button>
         </footer>
         </div>
     </div>
@@ -236,9 +237,8 @@ $count_of_request = $prepare_count_request->fetchColumn();
             <div class="modal-card card_modal">
                 <header class="modal-card-head">
                     <div class="modal-card-title">
-                    <input type="text" class="input is-large is-info title is-3 custom-text-color"id="edit_title">
+                    <input type="text" class="input is-large is-info title is-3 custom-text-color" name="edit_title" id="edit_title">
                     </div>
-                    <!--p class="modal-card-title title is-3 custom-text-color" id="edit_title"></p-->
                     <button class="delete" id="close_edit_button"></button>
                 </header>
                 <section class="modal-card-body">
@@ -262,12 +262,13 @@ $count_of_request = $prepare_count_request->fetchColumn();
                         <tbody>
                         </tbody>
                     </table>
+                    <div class="sticky-container ">
+                        <button type="button" class="button is-responsive custom-background-color has-text-white sticky-button" onclick="generate_edit_field_edit()">
+                        Add Breakdown&nbsp<i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
                 </section>
-                <footer class="modal-card-foot">
-                    <button type="button" class="button is-reponsive custom-background-color has-text-white">
-                    <i class="fa-solid fa-floppy-disk" style="color: #ffffff;"></i>&nbsp&nbspSave
-                    </button>
-                </footer>
+                <footer class="modal-card-foot" id="edit_footer"></footer>
             </div>
         </div>
     </form>
@@ -276,7 +277,7 @@ $count_of_request = $prepare_count_request->fetchColumn();
 <!--End of html-->
 
 <script>
-
+    
 var button_edit = document.querySelector('[name=edit_modal_open]');
 
 //For Edit Modal   
@@ -300,7 +301,6 @@ close_modal_view.addEventListener('click',function(){
         open_view_modal_view_request.classList.remove('is-active','is-closing');
     },300);
 });
-
 
 
 // Script for opening and closing the modal   
@@ -331,9 +331,6 @@ function addpending(title, date, request_id, status){
     var request_status = addrow.insertCell(2);
     var request_config = addrow.insertCell(3);
 
-    //assigning an id to the button 
-    button_edit.id="button_edit_view["+request_id+"]";
-    
     title_row.classList.add('has-text-centered');
     title_row.innerHTML = title;
     request_date.classList.add('has-text-centered');
@@ -550,16 +547,125 @@ function generatefield(){
 
     updateTotal(); // Initialize total price correctly
 }
-/*function assign_button(id){
-    <button type="button" class="button is-responsive custom-background-color has-text-white" name="edit_modal_open">
-        <i class="fa-solid fa-file-pen" style="color: #ffffff;"></i>&nbsp&nbspEdit
-    </button>
 
+function generate_edit_field_edit(){
+    var fetch_edit_table = document.getElementById('edit_table');
+    var get_edit_body = document.getElementsByTagName('tbody')[4];
+    var add_row = get_edit_body.insertRow();
+
+    var Purpose_cell = add_row.insertCell(0);
+    var Unit_price_cell = add_row.insertCell(1);
+    var Quantity_cell = add_row.insertCell(2);
+    var Total_cell = add_row.insertCell(3);
+    var desc_cell = add_row.insertCell(4);
+    var config_cell = add_row.insertCell(5);
+
+    let purposeInput = document.createElement("input");
+    purposeInput.type ="text";
+    purposeInput.placeholder ="Enter Purpose here";
+    purposeInput.classList.add('input', 'is-info');
+    purposeInput.name="purpose_input[]";
+
+    let UnitInput = document.createElement("input");
+    UnitInput.type = "number";
+    UnitInput.placeholder ="Enter price per piece here.";
+    UnitInput.classList.add('input','is-info');
+    UnitInput.name="unit_input[]";
+
+    let quantityInput = document.createElement("input");
+    quantityInput.type = "number";
+    quantityInput.value = 1;
+    quantityInput.classList.add('input','is-info');
+    quantityInput.name="quantityInput[]";
+
+    let totalInput = document.createElement("input");
+    totalInput.type = "number";
+    totalInput.readOnly = true;
+    totalInput.classList.add('input','is-info');
+    totalInput.name="totalInput[]";
+
+    let DescriptionInput = document.createElement("input");
+    DescriptionInput.type="text";
+    DescriptionInput.classList.add('input','is-info');
+    DescriptionInput.placeholder = "Enter "
+    DescriptionInput.name="desc_Input[]";
+
+    let configuration_button = document.createElement("button");
+    configuration_button.classList.add('button','is-danger','is-small',);
+    configuration_button.title = 'Remove';
+    configuration_button.innerHTML ='<i class="fa-regular fa-trash-can" style="color: #ffffff;"></i>';
+    configuration_button.name="config_Input[]";
+    configuration_button.addEventListener("input",function(){
+        add_row.remove();
+    });
+
+    let config_div = document.createElement("div");
+    config_div.classList.add('is-flex','is-justify-content-center','is-align-items-center','mt-3');
+    config_div.appendChild(configuration_button);
+
+    UnitInput.addEventListener("input",function(){
+        if(this.value<0){
+            this.value = 0;
+        };
+        updateTotal();
+    })
+    quantityInput.addEventListener("input", function(){
+        if(this.value <= 0){
+            this.value = 1;
+        }
+        updateTotal(); 
+    });
+
+    function updateTotal() {
+        let price = parseFloat(UnitInput.value) || 0;
+        let piece = parseFloat(quantityInput.value) || 1;
+        totalInput.value = price * piece;
+    }
+
+    Purpose_cell.appendChild(purposeInput);
+    Unit_price_cell.appendChild(UnitInput);
+    Quantity_cell.appendChild(quantityInput);
+    Total_cell.appendChild(totalInput);
+    desc_cell.appendChild(DescriptionInput);
+    config_cell.appendChild(config_div);
+
+    updateTotal();
+
+}
+
+//function for generating an
+function save_edit_button_name(id){
+    var get_edit_footer = document.getElementById('edit_footer');
+
+    var save_button = document.createElement('button');
+    save_button.classList.add('button','is-reponsive','custom-background-color','has-text-white');
+    save_button.innerHTML="<i class='fa-solid fa-floppy-disk 'style='color: #ffffff;'></i>&nbsp&nbspSave";
+    save_button.type="submit";
+    save_button.name="save_edit_button["+id+"]";
+
+    get_edit_footer.appendChild(save_button);
+
+}
+
+function assign_button(id){
     var get_view_footer = document.getElementById('viewing_footer');
     var create_button = document.createElement("button");
-    
+
+    let edit_view_form = document.createElement("form");
+    edit_view_form.action="";
+    edit_view_form.method ="post";
+    edit_view_form.id="edit_form";
+
+    create_button.classList.add('button','is-reponsive','custom-background-color','has-text-white');
+    create_button.name ="edit_button["+id+"]";
+    create_button.innerHTML = '<i class="fa-solid fa-file-pen" style="color: #ffffff;"></i>&nbsp&nbsp<span class="has-text-white">Edit</span>';
+    create_button.title ="Edit";
+    create_button.type="submit";
+
+    edit_view_form.appendChild(create_button);
+    get_view_footer.appendChild(edit_view_form);
 }
-   */
+
 //To still make interaction whenever the user presses the enter button
 function EnterButton(event){
         if(event.key ==='Enter'){
@@ -605,9 +711,8 @@ function edit_modal_content( modal_title, amount_number, amount_words){
     modal_words.innerHTML=amount_words;
 }
 
-//function for creating fields intended for modal update
-function generate_edit_fields(purpose, unit_price, quantity, total, description){
-    
+
+function generate_edit_fields(purpose, unit_price, quantity, total, description,id){
     var edit_table = document.getElementById('edit_table');
     var edit_table_body = document.getElementsByTagName('tbody')[4];
     var add_edit_row = edit_table_body.insertRow();
@@ -623,36 +728,61 @@ function generate_edit_fields(purpose, unit_price, quantity, total, description)
     purpose_input.type ="text";
     purpose_input.value=purpose;
     purpose_input.classList.add('input','is-info');
+    purpose_input.name="purpose_edit["+id+"]";
 
     let unit_price_input = document.createElement("input");
     unit_price_input.type = "number";
     unit_price_input.value=unit_price;
     unit_price_input.classList.add('input','is-info');
+    unit_price_input.name="unit_price_edit["+id+"]";
 
     let quantity_input = document.createElement("input");
     quantity_input.type="number";
     quantity_input.value=quantity;
     quantity_input.classList.add('input','is-info');
+    quantity_input.name="quantity_edit["+id+"]";
 
     let total_input = document.createElement("input");
     total_input.type ="number";
     total_input.value=total;
     total_input.readOnly=true
     total_input.classList.add('input','is-info');
+    total_input.name="total_input_edit["+id+"]";
 
     let description_input = document.createElement("input");
     description_input.type="text";
     description_input.value=description;
     description_input.classList.add('input','is-info');
+    description_input.name="description_edit["+id+"]";
 
     let configuration_button = document.createElement("button");
     configuration_button.classList.add('button','is-danger','is-small',);
     configuration_button.title = 'Remove';
     configuration_button.innerHTML ='<i class="fa-regular fa-trash-can" style="color: #ffffff;"></i>';
+    configuration_button.name="configuration_edit["+id+"]";
 
     let config_div = document.createElement("div");
     config_div.classList.add('is-flex','is-justify-content-center','is-align-items-center','mt-3');
     config_div.appendChild(configuration_button);
+
+    unit_price_input.addEventListener("input",function(){
+        if(this.value<0){
+            this.value = 0;
+        };
+        updateTotal();
+    })
+    quantity_input.addEventListener("input", function(){
+        if(this.value <= 0){
+            this.value = 1;
+        }
+        updateTotal(); 
+    });
+
+    function updateTotal() {
+        let price = parseFloat(unit_price_input.value) || 0;
+        let piece = parseFloat(quantity_input.value) || 1;
+        total_input.value = price * piece;
+    }
 
     edit_purpose_row.appendChild(purpose_input);
     unit_price_row.appendChild(unit_price_input);
@@ -660,6 +790,8 @@ function generate_edit_fields(purpose, unit_price, quantity, total, description)
     total_row.appendChild(total_input);
     description_row.appendChild(description_input);
     configuration_row.appendChild(config_div);
+
+    updateTotal();
 }
 
 //For avoiding form resubmission when page refresh
@@ -848,6 +980,8 @@ if (isset($_POST['save'])) {
                             " . json_encode($fetched_title['request_title']) . ");
                     </script>";
 
+                    echo "<script>assign_button(".addslashes($id).")</script>";
+
                 $Select_Request = "SELECT * FROM Request_Breakdown WHERE request_title_id = :requested_id";
                 $prepare_selection = $conn->prepare($Select_Request);
                 $prepare_selection->bindValue(':requested_id', $id, PDO::PARAM_INT);
@@ -888,7 +1022,8 @@ if (isset($_POST['save'])) {
                 edit_modal_content(" . json_encode($fetched_title['request_title']) . ", 
                             " . json_encode($fetched_title['request_total_amount']) . ", 
                             " . json_encode($converted_word) . ");
-                    open_edit_modal.classList.add('is-active');
+                save_edit_button_name($id);   
+                open_edit_modal.classList.add('is-active');
                     </script>";
                 
                 $Select_breakdown = "SELECT * FROM Request_Breakdown WHERE request_title_id=:requested_id";
@@ -903,7 +1038,8 @@ if (isset($_POST['save'])) {
                                                   .addslashes($data['request_unit_price']).', '
                                                   .addslashes($data['request_quantity']).', '
                                                   .addslashes($data['request_breakdown_amount']).', '
-                                                  .json_encode(addslashes($data['request_brief_description'])).");
+                                                  .json_encode(addslashes($data['request_brief_description'])).', '
+                                                  .json_encode($data['request_title_id']).");
                          </script>";
                 }
             }catch(PDOException $e){
@@ -911,6 +1047,72 @@ if (isset($_POST['save'])) {
             }
             
         }
+    }
+    if(isset($_POST['save_edit_button'])){
+        $new_title = $_POST['edit_title'];
+        foreach($_POST['save_edit_button'] as $id=>$value){
+            try{
+                $update_content = "UPDATE tbl_request SET request_title = :new_title, request_total_amount = :request_total_amount WHERE request_id =:secret_id";
+                $prepare_update_title = $conn->prepare($update_content);
+                $prepare_update_title ->bindParam(':secret_id',$id);
+                $prepare_update_title -> bindParam(':new_title',$new_title);//need to get the name array value
+                
+                $Fetch_current_breakdown = "SELECT request_breakdown_description, request_unit_price, request_quantity, request_breakdown_amount, request_title_id, request_brief_description FROM Request_Breakdown 
+                WHERE request_title_id = :hidden_id";
+                $prepare_fetching = $conn ->prepare($Fetch_current_breakdown);
+                $prepare_fetching -> bindParam(':hidden_id', $id);
+                $prepare_fetching ->execute();
+                $results = $prepare_fetching -> fetchAll(PDO::FETCH_ASSOC);
+
+                $delete_breakdown = "DELETE FROM Request_Breakdown WHERE request_title_id =:value_id";
+                $prepare_delete_breakdown = $conn->prepare($delete_breakdown);
+                $prepare_delete_breakdown ->bindParam(':value_id',$id);
+                $prepare_delete_breakdown -> execute();
+
+                $sql_new_breakdown = "INSERT into Request_Breakdown(request_breakdown_description, request_unit_price, request_quantity, request_breakdown_amount, request_title_id, request_brief_description) 
+                    VALUES(:request_desc, :request_unit_price, :request_quantity, :request_breakdown_amount, :request_title_id, :request_brief_desc)";
+               
+               $new_total_amount = 0;
+                foreach($results as $result){
+                    $new_total_amount += $result['request_breakdown_amount'];
+                    $prepare_update_breakdown = $conn ->prepare($sql_new_breakdown);
+                    $prepare_update_breakdown ->bindParam(':request_desc', $result['request_breakdown_description']);
+                    $prepare_update_breakdown ->bindParam(':request_unit_price', $result['request_unit_price']);
+                    $prepare_update_breakdown ->bindParam(':request_quantity',$result['request_quantity']);
+                    $prepare_update_breakdown ->bindParam(':request_breakdown_amount',$result['request_breakdown_amount']);
+                    $prepare_update_breakdown ->bindParam(':request_title_id',$result['request_title_id']);
+                    $prepare_update_breakdown ->bindParam(':request_brief_desc',$result['request_brief_description']);
+                    $prepare_update_breakdown -> execute();
+                }
+
+                for($i=0; $i<count($_POST['unit_input']); $i++){
+                    $purpose_edit = $_POST['purpose_input'][$i];
+                    $unit_edit = $_POST['unit_input'][$i];
+                    $quantity_edit = $_POST['quantityInput'][$i];
+                    $total_edit = $_POST['totalInput'][$i];
+                    $desc_edit = $_POST['desc_Input'][$i];
+                    
+                    $prepare_update_breakdown = $conn ->prepare($sql_new_breakdown);
+                    $prepare_update_breakdown ->bindParam(':request_desc', $purpose_edit);
+                    $prepare_update_breakdown ->bindParam(':request_unit_price', $unit_edit);
+                    $prepare_update_breakdown ->bindParam(':request_quantity', $quantity_edit);
+                    $prepare_update_breakdown ->bindParam(':request_breakdown_amount', $total_edit);
+                    $prepare_update_breakdown ->bindParam(':request_title_id', $id);
+                    $prepare_update_breakdown ->bindParam(':request_brief_desc',$desc_edit);
+                    $prepare_update_breakdown -> execute();
+                    $new_total_amount += $total_edit;
+                }
+                $prepare_update_title -> bindParam(':request_total_amount', $new_total_amount);
+                $prepare_update_title -> execute();
+                 // Create a new query for updating total amount
+               
+            }
+            catch(PDOException $e){
+                echo "<script>console.error('Database Error: " . addslashes($e->getMessage()) . "');</script>";
+            }
+        }
+        echo '<script>window.location.href = "requestor.php";</script>';
+
     }
     
 ?>
